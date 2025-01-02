@@ -3,148 +3,255 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- User Progress Section -->
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h4 class="card-title">Your Progress</h4>
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h5>Level {{ current_user.level }}</h5>
+<div class="container">
+    <!-- User Stats Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center">
+                            <h4>Level {{ current_user.level }}</h4>
                             <div class="progress mb-2">
-                                <div class="progress-bar" role="progressbar" style="width: {{ current_user.progress }}%"></div>
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ (current_user.points % 100) }}%" 
+                                     aria-valuenow="{{ current_user.points % 100 }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
                             </div>
-                            <small>{{ current_user.points }} points</small>
+                            <p class="text-muted">{{ current_user.points }} points</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h5>Your Badges</h5>
+                            <div class="badges-container">
+                                {% for badge in current_user.badges %}
+                                <span class="badge bg-success me-2" title="{{ badge.description }}">
+                                    <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-8">
-                        <div class="badges-container">
-                            {% for badge in current_user.badges %}
-                            <span class="badge bg-success me-2" title="{{ badge.description }}">
-                                <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
-                            </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h6>Goals</h6>
+                            <h3>{{ goals|length }}</h3>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6>Complete</h6>
+                            <h3>{{ goals|selectattr('completed')|list|length }}</h3>
+                        </div>
+                        <div class="col-6">
+                            <h6>Streak</h6>
+                            <h3>{{ current_user.current_streak }}</h3>
+                        </div>
+                        <div class="col-6">
+                            <h6>Partners</h6>
+                            <h3>{{ partnerships|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partnerships Section -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Goals Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="card-title mb-0">Your Goals</h4>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+                            <i class="fas fa-plus"></i> Add Goal
+                        </button>
+                    </div>
+
+                    <!-- Goal Categories -->
+                    <div class="mb-3">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                            {% for category in categories %}
+                            <button type="button" class="btn btn-outline-primary" data-filter="{{ category.name|lower }}">
+                                {{ category.name }}
+                            </button>
                             {% endfor %}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Daily Check-in Section -->
-    <div class="col-md-4">
-        {% if partnerships %}
-        {% for partnership in partnerships %}
-        {% if partnership.status == 'accepted' %}
-        <div class="card mb-4">
-            <div class="card-body">
-                <h4 class="card-title">Daily Check-in with 
-                    {% if partnership.user_id == current_user.id %}
-                        {{ partnership.partner.username }}
-                    {% else %}
-                        {{ partnership.user.username }}
-                    {% endif %}
-                </h4>
-                <form action="{{ url_for('check_in', partnership_id=partnership.id) }}" method="post">
-                    <div class="mb-3">
-                        <label class="form-label">How are you feeling today?</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="mood" value="5" id="mood1_{{ partnership.id }}" required>
-                            <label class="btn btn-outline-success" for="mood1_{{ partnership.id }}">😊</label>
-                            
-                            <input type="radio" class="btn-check" name="mood" value="4" id="mood2_{{ partnership.id }}">
-                            <label class="btn btn-outline-primary" for="mood2_{{ partnership.id }}">🙂</label>
-                            
-                            <input type="radio" class="btn-check" name="mood" value="3" id="mood3_{{ partnership.id }}">
-                            <label class="btn btn-outline-warning" for="mood3_{{ partnership.id }}">😐</label>
-                            
-                            <input type="radio" class="btn-check" name="mood" value="2" id="mood4_{{ partnership.id }}">
-                            <label class="btn btn-outline-danger" for="mood4_{{ partnership.id }}">😔</label>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Message for your partner:</label>
-                        <textarea class="form-control" name="message" rows="2"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Check In</button>
-                </form>
-                {% if partnership.last_check_in %}
-                <div class="mt-2 text-center">
-                    <small class="text-muted">Last check-in: {{ partnership.last_check_in.strftime('%Y-%m-%d %H:%M') }}</small>
-                    <br>
-                    <small class="text-success">Current streak: {{ partnership.check_in_streak }} days</small>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        {% else %}
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <h4 class="card-title">No Active Partnerships</h4>
-                <p class="text-muted">Add a partner to start checking in daily!</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
-                    <i class="fas fa-user-plus"></i> Add Partner
-                </button>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Goals Section -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="card-title mb-0">Your Goals</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
-                        <i class="fas fa-plus"></i> Add Goal
-                    </button>
-                </div>
-
-                <!-- Goal Filters -->
-                <div class="btn-group mb-3" role="group">
-                    <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
-                    <button type="button" class="btn btn-outline-primary" data-filter="active">Active</button>
-                    <button type="button" class="btn btn-outline-primary" data-filter="completed">Completed</button>
-                </div>
-
-                <!-- Goals List -->
-                <div class="goals-container">
-                    {% for goal in goals %}
-                    <div class="card mb-3 goal-card" data-status="{{ 'completed' if goal.completed else 'active' }}">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h5 class="card-title">{{ goal.title }}</h5>
-                                    <p class="card-text">{{ goal.description }}</p>
-                                    <div class="badges">
-                                        <span class="badge bg-primary">{{ goal.category.name }}</span>
-                                        <span class="badge bg-secondary">{{ goal.difficulty }}/5 Difficulty</span>
-                                        {% if goal.streak > 0 %}
-                                        <span class="badge bg-success">{{ goal.streak }} Day Streak! 🔥</span>
-                                        {% endif %}
+                    <!-- Goals List -->
+                    <div class="goals-container">
+                        {% for goal in goals %}
+                        <div class="card mb-3 goal-card" data-category="{{ goal.category.name|lower }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">{{ goal.title }}</h5>
+                                        <p class="card-text">{{ goal.description }}</p>
+                                        <div class="badges">
+                                            <span class="badge bg-primary">{{ goal.category.name }}</span>
+                                            <span class="badge bg-info">{{ goal.difficulty }}/5 Difficulty</span>
+                                            {% if goal.streak > 0 %}
+                                            <span class="badge bg-warning">
+                                                {{ goal.streak }} Day Streak 🔥
+                                            </span>
+                                            {% endif %}
+                                            {% if goal.completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="text-end">
                                     {% if not goal.completed %}
-                                    <button class="btn btn-success btn-sm" onclick="completeGoal({{ goal.id }})">
-                                        <i class="fas fa-check"></i> Complete
-                                    </button>
+                                    <div>
+                                        <form action="{{ url_for('complete_goal', goal_id=goal.id) }}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                        </form>
+                                    </div>
                                     {% endif %}
-                                    <button class="btn btn-danger btn-sm" onclick="deleteGoal({{ goal.id }})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Partnerships -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="card-title mb-0">Partnerships</h4>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
+                            <i class="fas fa-user-plus"></i> Add Partner
+                        </button>
+                    </div>
+
+                    {% if partnerships %}
+                        {% for partnership in partnerships %}
+                            {% if partnership.status == 'accepted' %}
+                                <div class="partnership-card mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="mb-0">
+                                            {% if partnership.user_id == current_user.id %}
+                                                {{ partnership.partner.username }}
+                                            {% else %}
+                                                {{ partnership.user.username }}
+                                            {% endif %}
+                                        </h5>
+                                        <span class="badge bg-success">{{ partnership.check_in_streak }} day streak</span>
+                                    </div>
+
+                                    {% set partner_checkin = get_latest_checkin(partnership.id, current_user.id) %}
+                                    {% set my_checkin = get_my_latest_checkin(partnership.id, current_user.id) %}
+                                    
+                                    <!-- Check-in Status -->
+                                    <div class="checkin-status mb-3">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Your Status:</small><br>
+                                                {% if my_checkin and my_checkin.created_at.date() == today %}
+                                                    <span class="text-success">
+                                                        <i class="fas fa-check"></i> Checked in
+                                                        {% if my_checkin.mood == 5 %}😊
+                                                        {% elif my_checkin.mood == 4 %}🙂
+                                                        {% elif my_checkin.mood == 3 %}😐
+                                                        {% else %}😔
+                                                        {% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-warning">
+                                                        <i class="fas fa-clock"></i> Not checked in
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Partner's Status:</small><br>
+                                                {% if partner_checkin and partner_checkin.created_at.date() == today %}
+                                                    <span class="text-success">
+                                                        <i class="fas fa-check"></i> Checked in
+                                                        {% if partner_checkin.mood == 5 %}😊
+                                                        {% elif partner_checkin.mood == 4 %}🙂
+                                                        {% elif partner_checkin.mood == 3 %}😐
+                                                        {% else %}😔
+                                                        {% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-warning">
+                                                        <i class="fas fa-clock"></i> Not checked in
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {% if not my_checkin or my_checkin.created_at.date() != today %}
+                                        <form action="{{ url_for('check_in', partnership_id=partnership.id) }}" method="post">
+                                            <div class="mb-3">
+                                                <label class="form-label">How are you feeling today?</label>
+                                                <div class="btn-group w-100" role="group">
+                                                    <input type="radio" class="btn-check" name="mood" value="5" id="mood5_{{ partnership.id }}" required>
+                                                    <label class="btn btn-outline-success" for="mood5_{{ partnership.id }}">😊</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="mood" value="4" id="mood4_{{ partnership.id }}">
+                                                    <label class="btn btn-outline-primary" for="mood4_{{ partnership.id }}">🙂</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="mood" value="3" id="mood3_{{ partnership.id }}">
+                                                    <label class="btn btn-outline-warning" for="mood3_{{ partnership.id }}">😐</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="mood" value="2" id="mood2_{{ partnership.id }}">
+                                                    <label class="btn btn-outline-danger" for="mood2_{{ partnership.id }}">😔</label>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Message for your partner:</label>
+                                                <textarea class="form-control" name="message" rows="2"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">Check In</button>
+                                        </form>
+                                    {% else %}
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i> You've checked in today!
+                                            {% if my_checkin.message %}
+                                                <div class="mt-2">
+                                                    <small class="text-muted">Your message:</small><br>
+                                                    {{ my_checkin.message }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if partner_checkin and partner_checkin.created_at.date() == today and partner_checkin.message %}
+                                        <div class="alert alert-info mt-3">
+                                            <small class="text-muted">Partner's message:</small><br>
+                                            {{ partner_checkin.message }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted">No active partnerships</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
+                                <i class="fas fa-user-plus"></i> Add Your First Partner
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -159,8 +266,8 @@
                 <h5 class="modal-title">Add New Goal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="addGoalForm" action="{{ url_for('add_goal') }}" method="post">
+            <form action="{{ url_for('add_goal') }}" method="post">
+                <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Title</label>
                         <input type="text" class="form-control" name="title" required>
@@ -180,25 +287,47 @@
                     <div class="mb-3">
                         <label class="form-label">Difficulty (1-5)</label>
                         <input type="range" class="form-range" name="difficulty" min="1" max="5" value="3">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Requires Verification</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="requires_verification" id="requiresVerification">
-                            <label class="form-check-label" for="requiresVerification">
-                                Require proof of completion
-                            </label>
+                        <div class="d-flex justify-content-between">
+                            <small>Easy</small>
+                            <small>Medium</small>
+                            <small>Hard</small>
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="addGoalForm" class="btn btn-primary">Add Goal</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Goal</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Add Partner Modal -->
+<div class="modal fade" id="addPartnerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Partner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_partner') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Partner's Username</label>
+                        <input type="text" class="form-control" name="partner_username" required>
+                        <small class="text-muted">Enter the username of the person you want to partner with</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -216,7 +345,7 @@
             
             const filter = e.target.dataset.filter;
             document.querySelectorAll('.goal-card').forEach(card => {
-                if (filter === 'all' || card.dataset.status === filter) {
+                if (filter === 'all' || card.dataset.category === filter) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';
@@ -224,29 +353,5 @@
             });
         });
     });
-
-    // Goal completion
-    function completeGoal(goalId) {
-        fetch(`/complete_goal/${goalId}`, {
-            method: 'POST',
-        }).then(response => {
-            if (response.ok) {
-                location.reload();
-            }
-        });
-    }
-
-    // Goal deletion
-    function deleteGoal(goalId) {
-        if (confirm('Are you sure you want to delete this goal?')) {
-            fetch(`/delete_goal/${goalId}`, {
-                method: 'POST',
-            }).then(response => {
-                if (response.ok) {
-                    location.reload();
-                }
-            });
-        }
-    }
 </script>
 {% endblock %}

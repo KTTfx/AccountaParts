@@ -141,34 +141,49 @@ def update_streak(goal):
     goal.last_streak_update = datetime.utcnow()
 
 def check_and_award_badges(user):
-    # Check for streak badges
-    streak_badges = {
-        7: "Week Warrior",
-        30: "Monthly Master",
-        100: "Century Champion"
-    }
-    
-    max_streak = db.session.query(db.func.max(Goal.streak)).filter_by(user_id=user.id).scalar() or 0
-    
-    for streak, badge_name in streak_badges.items():
-        if max_streak >= streak:
-            badge = Badge.query.filter_by(name=badge_name).first()
-            if badge and not UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first():
-                user_badge = UserBadge(user_id=user.id, badge_id=badge.id)
-                db.session.add(user_badge)
-                flash(f'Congratulations! You earned the {badge_name} badge!')
-
-    # Check for category badges
-    categories_completed = db.session.query(Goal.category_id).filter_by(
-        user_id=user.id, completed=True
-    ).distinct().count()
-    
-    if categories_completed >= 5:
-        badge = Badge.query.filter_by(name="Versatility Victor").first()
-        if badge and not UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first():
-            user_badge = UserBadge(user_id=user.id, badge_id=badge.id)
+    """Check and award badges based on user achievements"""
+    # Check Week Warrior badge (7-day streak)
+    week_warrior = Badge.query.filter_by(name='Week Warrior').first()
+    if week_warrior and not UserBadge.query.filter_by(user_id=user.id, badge_id=week_warrior.id).first():
+        goals_with_week_streak = Goal.query.filter_by(user_id=user.id, streak__gte=7).count()
+        if goals_with_week_streak >= 1:
+            user_badge = UserBadge(user_id=user.id, badge_id=week_warrior.id)
             db.session.add(user_badge)
-            flash(f'Congratulations! You earned the Versatility Victor badge!')
+            user.points += week_warrior.points
+            flash(f'Congratulations! You earned the {week_warrior.name} badge and {week_warrior.points} points!', 'success')
+
+    # Check Monthly Master badge (30-day streak)
+    monthly_master = Badge.query.filter_by(name='Monthly Master').first()
+    if monthly_master and not UserBadge.query.filter_by(user_id=user.id, badge_id=monthly_master.id).first():
+        goals_with_month_streak = Goal.query.filter_by(user_id=user.id, streak__gte=30).count()
+        if goals_with_month_streak >= 1:
+            user_badge = UserBadge(user_id=user.id, badge_id=monthly_master.id)
+            db.session.add(user_badge)
+            user.points += monthly_master.points
+            flash(f'Congratulations! You earned the {monthly_master.name} badge and {monthly_master.points} points!', 'success')
+
+    # Check Perfect Partner badge (7-day partnership streak)
+    perfect_partner = Badge.query.filter_by(name='Perfect Partner').first()
+    if perfect_partner and not UserBadge.query.filter_by(user_id=user.id, badge_id=perfect_partner.id).first():
+        partnerships_with_streak = Partnership.query.filter(
+            ((Partnership.user_id == user.id) | (Partnership.partner_id == user.id)) &
+            (Partnership.check_in_streak >= 7)
+        ).count()
+        if partnerships_with_streak >= 1:
+            user_badge = UserBadge(user_id=user.id, badge_id=perfect_partner.id)
+            db.session.add(user_badge)
+            user.points += perfect_partner.points
+            flash(f'Congratulations! You earned the {perfect_partner.name} badge and {perfect_partner.points} points!', 'success')
+
+    # Check Goal Getter badge (complete 10 goals)
+    goal_getter = Badge.query.filter_by(name='Goal Getter').first()
+    if goal_getter and not UserBadge.query.filter_by(user_id=user.id, badge_id=goal_getter.id).first():
+        completed_goals = Goal.query.filter_by(user_id=user.id, completed=True).count()
+        if completed_goals >= 10:
+            user_badge = UserBadge(user_id=user.id, badge_id=goal_getter.id)
+            db.session.add(user_badge)
+            user.points += goal_getter.points
+            flash(f'Congratulations! You earned the {goal_getter.name} badge and {goal_getter.points} points!', 'success')
 
 # Routes
 @app.route('/')
@@ -226,6 +241,13 @@ def dashboard():
         (Partnership.user_id == current_user.id) | 
         (Partnership.partner_id == current_user.id)
     ).all()
+    
+    # Add template context processors for check-ins
+    app.jinja_env.globals.update(
+        get_latest_checkin=get_latest_checkin,
+        get_my_latest_checkin=get_my_latest_checkin
+    )
+    
     return render_template('dashboard.html', 
                          categories=categories, 
                          goals=goals, 
@@ -350,112 +372,157 @@ def verify_goal(goal_id):
     
     return redirect(url_for('dashboard'))
 
+def get_latest_checkin(partnership_id, user_id):
+    """Get the latest check-in for a partner in a partnership"""
+    partnership = Partnership.query.get(partnership_id)
+    if not partnership:
+        return None
+    
+    # Determine if user is user or partner in the partnership
+    if user_id == partnership.user_id:
+        partner_id = partnership.partner_id
+    else:
+        partner_id = partnership.user_id
+    
+    return CheckIn.query.filter_by(
+        partnership_id=partnership_id,
+        user_id=partner_id
+    ).order_by(CheckIn.created_at.desc()).first()
+
+def get_my_latest_checkin(partnership_id, user_id):
+    """Get the user's latest check-in for a partnership"""
+    return CheckIn.query.filter_by(
+        partnership_id=partnership_id,
+        user_id=user_id
+    ).order_by(CheckIn.created_at.desc()).first()
+
+@app.route('/add_partner', methods=['POST'])
+@login_required
+def add_partner():
+    partner_username = request.form.get('partner_username')
+    if not partner_username:
+        flash('Please enter a username', 'error')
+        return redirect(url_for('dashboard'))
+    
+    partner = User.query.filter_by(username=partner_username).first()
+    if not partner:
+        flash('User not found', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if partner.id == current_user.id:
+        flash('You cannot partner with yourself', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Check if partnership already exists
+    existing = Partnership.query.filter(
+        ((Partnership.user_id == current_user.id) & (Partnership.partner_id == partner.id)) |
+        ((Partnership.user_id == partner.id) & (Partnership.partner_id == current_user.id))
+    ).first()
+    
+    if existing:
+        if existing.status == 'pending':
+            flash('Partnership request already sent', 'info')
+        elif existing.status == 'accepted':
+            flash('You are already partners', 'info')
+        return redirect(url_for('dashboard'))
+    
+    # Create new partnership
+    partnership = Partnership(
+        user_id=current_user.id,
+        partner_id=partner.id,
+        status='pending'
+    )
+    db.session.add(partnership)
+    db.session.commit()
+    
+    flash(f'Partnership request sent to {partner_username}', 'success')
+    return redirect(url_for('dashboard'))
+
 @app.route('/check_in/<int:partnership_id>', methods=['POST'])
 @login_required
 def check_in(partnership_id):
     partnership = Partnership.query.get_or_404(partnership_id)
-    if partnership.user_id != current_user.id and partnership.partner_id != current_user.id:
-        flash('Unauthorized access!', 'danger')
+    
+    # Verify user is part of the partnership
+    if current_user.id not in [partnership.user_id, partnership.partner_id]:
+        flash('Unauthorized', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Check if already checked in today
+    today = datetime.utcnow().date()
+    existing_checkin = CheckIn.query.filter(
+        CheckIn.partnership_id == partnership_id,
+        CheckIn.user_id == current_user.id,
+        func.date(CheckIn.created_at) == today
+    ).first()
+    
+    if existing_checkin:
+        flash('You have already checked in today', 'info')
         return redirect(url_for('dashboard'))
     
     mood = request.form.get('mood', type=int)
     message = request.form.get('message', '')
     
-    check_in = CheckIn(
+    if not mood or mood not in range(1, 6):
+        flash('Please select a valid mood', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Create check-in
+    checkin = CheckIn(
         partnership_id=partnership_id,
         user_id=current_user.id,
         mood=mood,
         message=message
     )
-    db.session.add(check_in)
-    
-    # Update partnership check-in streak
-    if partnership.last_check_in:
-        last_check_in_date = partnership.last_check_in.date()
-        today = datetime.utcnow().date()
-        if (today - last_check_in_date).days == 1:
-            partnership.check_in_streak += 1
-        elif (today - last_check_in_date).days > 1:
-            partnership.check_in_streak = 1
-    else:
-        partnership.check_in_streak = 1
-    
-    partnership.last_check_in = datetime.utcnow()
+    db.session.add(checkin)
+
+    # Update partnership streak and award points
+    partner_checkin = get_latest_checkin(partnership_id, current_user.id)
+    if partner_checkin and partner_checkin.created_at.date() == today:
+        partnership.check_in_streak += 1
+        # Award points for mutual check-in
+        current_user.points += 10
+        flash('You earned 10 points for checking in with your partner!', 'success')
+
+    # Check for badge achievements
+    check_and_award_badges(current_user)
+
     db.session.commit()
-    
-    flash('Check-in recorded successfully!', 'success')
+    flash('Check-in recorded!', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/goal/<int:goal_id>/complete', methods=['POST'])
+@app.route('/complete_goal/<int:goal_id>', methods=['POST'])
 @login_required
 def complete_goal(goal_id):
     goal = Goal.query.get_or_404(goal_id)
     if goal.user_id != current_user.id:
-        flash('Unauthorized access!', 'danger')
+        flash('Unauthorized', 'error')
         return redirect(url_for('dashboard'))
-    
-    goal.completed = True
-    
-    # Update streak
-    if goal.last_streak_update:
-        last_update = goal.last_streak_update.date()
-        today = datetime.utcnow().date()
-        if (today - last_update).days == 1:
-            goal.streak += 1
-        elif (today - last_update).days > 1:
-            goal.streak = 1
-    else:
-        goal.streak = 1
-    
-    goal.last_streak_update = datetime.utcnow()
-    
-    # Award points based on difficulty and streak
-    points = calculate_points(goal)
-    current_user.points += points
-    
-    # Update user level (every 100 points = 1 level)
-    current_user.level = (current_user.points // 100) + 1
-    
-    # Check for badge achievements
-    check_badges(current_user, goal)
-    
-    db.session.commit()
-    flash(f'Goal completed! You earned {points} points!', 'success')
+
+    if not goal.completed:
+        # Calculate points based on difficulty and streak
+        points = calculate_points(goal)
+        current_user.points += points
+        goal.completed = True
+        goal.completed_at = datetime.utcnow()
+
+        # Update user level (every 100 points = 1 level)
+        current_user.level = (current_user.points // 100) + 1
+
+        # Check for badge achievements
+        check_and_award_badges(current_user)
+
+        db.session.commit()
+        flash(f'Goal completed! You earned {points} points!', 'success')
+
     return redirect(url_for('dashboard'))
 
 def calculate_points(goal):
-    base_points = goal.points_reward
-    streak_bonus = min(goal.streak * 0.1, 1.0)  # Max 100% bonus for streaks
+    """Calculate points for completing a goal based on difficulty and streak"""
+    base_points = 10
+    streak_bonus = min(goal.streak * 0.1, 1.0)  # Max 100% bonus for streak
     difficulty_bonus = (goal.difficulty - 1) * 0.2  # 20% bonus per difficulty level above 1
     return int(base_points * (1 + streak_bonus + difficulty_bonus))
-
-def check_badges(user, goal):
-    # Check Week Warrior badge
-    if goal.streak >= 7:
-        badge = Badge.query.filter_by(name='Week Warrior').first()
-        if badge and not UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first():
-            user_badge = UserBadge(user_id=user.id, badge_id=badge.id)
-            db.session.add(user_badge)
-            user.points += badge.points
-            flash(f'Congratulations! You earned the {badge.name} badge and {badge.points} points!', 'success')
-    
-    # Check Monthly Master badge
-    if goal.streak >= 30:
-        badge = Badge.query.filter_by(name='Monthly Master').first()
-        if badge and not UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first():
-            user_badge = UserBadge(user_id=user.id, badge_id=badge.id)
-            db.session.add(user_badge)
-            user.points += badge.points
-            flash(f'Congratulations! You earned the {badge.name} badge and {badge.points} points!', 'success')
-    
-    # Check Century Champion badge
-    if goal.streak >= 100:
-        badge = Badge.query.filter_by(name='Century Champion').first()
-        if badge and not UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first():
-            user_badge = UserBadge(user_id=user.id, badge_id=badge.id)
-            db.session.add(user_badge)
-            user.points += badge.points
-            flash(f'Congratulations! You earned the {badge.name} badge and {badge.points} points!', 'success')
 
 @app.route('/add_comment/<int:goal_id>', methods=['POST'])
 @login_required
@@ -468,36 +535,6 @@ def add_comment(goal_id):
     )
     db.session.add(comment)
     db.session.commit()
-    return redirect(url_for('dashboard'))
-
-@app.route('/add_partner', methods=['POST'])
-@login_required
-def add_partner():
-    partner_username = request.form.get('partner_username')
-    partner = User.query.filter_by(username=partner_username).first()
-    
-    if not partner:
-        flash('User not found')
-        return redirect(url_for('dashboard'))
-        
-    if partner.id == current_user.id:
-        flash('You cannot partner with yourself')
-        return redirect(url_for('dashboard'))
-        
-    existing_partnership = Partnership.query.filter_by(
-        user_id=current_user.id,
-        partner_id=partner.id
-    ).first()
-    
-    if existing_partnership:
-        flash('Partnership already exists')
-        return redirect(url_for('dashboard'))
-        
-    partnership = Partnership(user_id=current_user.id, partner_id=partner.id)
-    db.session.add(partnership)
-    db.session.commit()
-    
-    flash(f'Partnership request sent to {partner_username}')
     return redirect(url_for('dashboard'))
 
 @app.route('/logout')
@@ -537,6 +574,20 @@ def create_sample_data():
             'icon': 'fa-star',
             'requirement': 'Complete at least one goal in 5 different categories',
             'points': 300
+        },
+        {
+            'name': 'Perfect Partner',
+            'description': 'Maintain a 7-day partnership streak',
+            'icon': 'fa-users',
+            'requirement': 'Maintain a 7-day partnership streak',
+            'points': 100
+        },
+        {
+            'name': 'Goal Getter',
+            'description': 'Complete 10 goals',
+            'icon': 'fa-check',
+            'requirement': 'Complete 10 goals',
+            'points': 500
         }
     ]
 
