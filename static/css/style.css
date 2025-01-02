@@ -1,15 +1,42 @@
 /* Custom styles */
 body {
     background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+}
+
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #dee2e6;
+    --bs-card-bg: #2c3034;
+    --bs-card-border-color: #373b3e;
+    background-color: #212529;
 }
 
 .navbar-brand {
     font-weight: bold;
 }
 
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .card {
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
 }
 
 .goals-container .card:hover {
@@ -25,8 +52,15 @@ body {
     font-size: 0.9rem;
 }
 
+.badges-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 .badge {
-    padding: 0.5em 0.8em;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
 }
 
 .bg-daily {
@@ -41,7 +75,60 @@ body {
     background-color: #6f42c1;
 }
 
+.goal-card {
+    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.goal-card .badges {
+    margin-top: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.btn-check:checked + .btn-outline-success,
+.btn-check:checked + .btn-outline-primary,
+.btn-check:checked + .btn-outline-warning,
+.btn-check:checked + .btn-outline-danger {
+    color: #fff;
+}
+
+/* Dark mode specific styles */
+[data-bs-theme="dark"] .btn-outline-light {
+    color: #f8f9fa;
+    border-color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .btn-outline-light:hover {
+    color: #212529;
+    background-color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+/* Theme toggle button */
+.dark-icon {
+    display: none;
+}
+
+[data-bs-theme="dark"] .dark-icon {
+    display: inline-block;
+}
+
+[data-bs-theme="dark"] .light-icon {
+    display: none;
+}
+
 /* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .fade-enter {
     opacity: 0;
 }
@@ -68,5 +155,13 @@ body {
     
     .card {
         margin-bottom: 1rem;
+    }
+    
+    .badges-container {
+        justify-content: center;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
     }
 }
