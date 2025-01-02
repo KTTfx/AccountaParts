@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from sqlalchemy import func
 
 load_dotenv()
 
@@ -24,11 +25,16 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(128))
     points = db.Column(db.Integer, default=0)
     level = db.Column(db.Integer, default=1)
+    badges = db.relationship('UserBadge', backref='user', lazy=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=True)
+    
+    # Relationships
     goals = db.relationship('Goal', backref='user', lazy=True)
+    checkins = db.relationship('CheckIn', backref='user', lazy=True)
     partnerships = db.relationship('Partnership', 
                                  foreign_keys='Partnership.user_id',
                                  backref='user', 
@@ -37,13 +43,12 @@ class User(UserMixin, db.Model):
                                foreign_keys='Partnership.partner_id',
                                backref='partner',
                                lazy=True)
-    badges = db.relationship('UserBadge', backref='user', lazy=True)
-
-    def get_partnerships(self):
-        return Partnership.query.filter(
-            (Partnership.user_id == self.id) | 
-            (Partnership.partner_id == self.id)
-        ).all()
+    comments = db.relationship('Comment', backref='author', lazy=True)
+    
+    def get_partner(self):
+        if self.partner_id:
+            return User.query.get(self.partner_id)
+        return None
 
 class Badge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -81,19 +86,17 @@ class Goal(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     deadline = db.Column(db.DateTime)
-    completed = db.Column(db.Boolean, default=False)
-    goal_type = db.Column(db.String(20))  # daily, weekly, monthly, yearly
+    goal_type = db.Column(db.String(50))  # daily, weekly, monthly
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    streak = db.Column(db.Integer, default=0)
-    last_streak_update = db.Column(db.DateTime)
-    difficulty = db.Column(db.Integer, default=1)  # 1-5 scale
+    difficulty = db.Column(db.Integer, default=1)  # 1-5
     verification_required = db.Column(db.Boolean, default=False)
-    verification_image = db.Column(db.String(200))
     points_reward = db.Column(db.Integer, default=10)
+    streak = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     tags = db.relationship('Tag', secondary=goal_tags, lazy='subquery',
         backref=db.backref('goals', lazy=True))
+    comments = db.relationship('Comment', backref=db.backref('target_goal', lazy=True), lazy=True)
 
 class Partnership(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -106,20 +109,17 @@ class Partnership(db.Model):
 
 class CheckIn(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    partnership_id = db.Column(db.Integer, db.ForeignKey('partnership.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    mood = db.Column(db.Integer)  # 1-5 scale
-    message = db.Column(db.Text)
+    mood = db.Column(db.String(10), nullable=False)
+    message = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
+    content = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=False)
-    is_verification = db.Column(db.Boolean, default=False)
-    is_encouragement = db.Column(db.Boolean, default=False)
 
 # Helper functions
 def calculate_points(goal):
@@ -185,6 +185,34 @@ def check_and_award_badges(user):
             user.points += goal_getter.points
             flash(f'Congratulations! You earned the {goal_getter.name} badge and {goal_getter.points} points!', 'success')
 
+def get_my_latest_checkin():
+    """Get the current user's latest check-in for today"""
+    today = datetime.utcnow().date()
+    return CheckIn.query.filter(
+        CheckIn.user_id == current_user.id,
+        func.date(CheckIn.created_at) == today
+    ).first()
+
+def get_partner_latest_checkin():
+    """Get the partner's latest check-in for today"""
+    if not current_user.partner_id:
+        return None
+        
+    today = datetime.utcnow().date()
+    return CheckIn.query.filter(
+        CheckIn.user_id == current_user.partner_id,
+        func.date(CheckIn.created_at) == today
+    ).first()
+
+@app.context_processor
+def utility_processor():
+    """Make check-in helper functions available in templates"""
+    return {
+        'get_my_latest_checkin': get_my_latest_checkin,
+        'get_partner_latest_checkin': get_partner_latest_checkin,
+        'today': datetime.utcnow().date()
+    }
+
 # Routes
 @app.route('/')
 def index():
@@ -237,21 +265,12 @@ def login():
 def dashboard():
     categories = Category.query.all()
     goals = Goal.query.filter_by(user_id=current_user.id).order_by(Goal.created_at.desc()).all()
-    partnerships = Partnership.query.filter(
-        (Partnership.user_id == current_user.id) | 
-        (Partnership.partner_id == current_user.id)
-    ).all()
-    
-    # Add template context processors for check-ins
-    app.jinja_env.globals.update(
-        get_latest_checkin=get_latest_checkin,
-        get_my_latest_checkin=get_my_latest_checkin
-    )
+    partner = current_user.get_partner()
     
     return render_template('dashboard.html', 
                          categories=categories, 
                          goals=goals, 
-                         partnerships=partnerships)
+                         partner=partner)
 
 @app.route('/categories')
 @login_required
@@ -278,37 +297,39 @@ def add_category():
 def add_goal():
     title = request.form.get('title')
     description = request.form.get('description')
-    deadline = datetime.strptime(request.form.get('deadline'), '%Y-%m-%dT%H:%M')
-    goal_type = request.form.get('goal_type')
     category_id = request.form.get('category_id')
-    difficulty = int(request.form.get('difficulty', 1))
-    verification_required = 'verification_required' in request.form
-    tags = request.form.get('tags', '').split(',')
+    goal_type = request.form.get('goal_type')
+    difficulty = request.form.get('difficulty')
+    deadline_str = request.form.get('deadline')
     
-    goal = Goal(
-        title=title,
-        description=description,
-        deadline=deadline,
-        goal_type=goal_type,
-        user_id=current_user.id,
-        category_id=category_id,
-        difficulty=difficulty,
-        verification_required=verification_required,
-        points_reward=10 * difficulty  # Base points * difficulty
-    )
+    if not all([title, description, category_id, goal_type, difficulty, deadline_str]):
+        flash('Please fill in all required fields', 'danger')
+        return redirect(url_for('dashboard'))
     
-    # Handle tags
-    for tag_name in tags:
-        tag_name = tag_name.strip()
-        if tag_name:
-            tag = Tag.query.filter_by(name=tag_name).first()
-            if not tag:
-                tag = Tag(name=tag_name)
-                db.session.add(tag)
-            goal.tags.append(tag)
-    
-    db.session.add(goal)
-    db.session.commit()
+    try:
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+        difficulty = int(difficulty)
+        category_id = int(category_id)
+        
+        goal = Goal(
+            title=title,
+            description=description,
+            category_id=category_id,
+            goal_type=goal_type,
+            difficulty=difficulty,
+            deadline=deadline,
+            user_id=current_user.id
+        )
+        
+        db.session.add(goal)
+        db.session.commit()
+        
+        flash('Goal added successfully!', 'success')
+    except ValueError as e:
+        flash('Invalid form data. Please check your inputs.', 'danger')
+    except Exception as e:
+        flash('An error occurred while adding the goal.', 'danger')
+        
     return redirect(url_for('dashboard'))
 
 @app.route('/toggle_goal/<int:goal_id>')
@@ -372,86 +393,69 @@ def verify_goal(goal_id):
     
     return redirect(url_for('dashboard'))
 
-def get_latest_checkin(partnership_id, user_id):
-    """Get the latest check-in for a partner in a partnership"""
-    partnership = Partnership.query.get(partnership_id)
-    if not partnership:
-        return None
-    
-    # Determine if user is user or partner in the partnership
-    if user_id == partnership.user_id:
-        partner_id = partnership.partner_id
-    else:
-        partner_id = partnership.user_id
-    
-    return CheckIn.query.filter_by(
-        partnership_id=partnership_id,
-        user_id=partner_id
-    ).order_by(CheckIn.created_at.desc()).first()
-
-def get_my_latest_checkin(partnership_id, user_id):
-    """Get the user's latest check-in for a partnership"""
-    return CheckIn.query.filter_by(
-        partnership_id=partnership_id,
-        user_id=user_id
-    ).order_by(CheckIn.created_at.desc()).first()
-
 @app.route('/add_partner', methods=['POST'])
 @login_required
 def add_partner():
     partner_username = request.form.get('partner_username')
+    
     if not partner_username:
-        flash('Please enter a username', 'error')
+        flash('Please enter a username', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    if partner_username == current_user.username:
+        flash('You cannot add yourself as a partner', 'danger')
         return redirect(url_for('dashboard'))
     
     partner = User.query.filter_by(username=partner_username).first()
+    
     if not partner:
-        flash('User not found', 'error')
+        flash('User not found', 'danger')
         return redirect(url_for('dashboard'))
     
-    if partner.id == current_user.id:
-        flash('You cannot partner with yourself', 'error')
+    # Check if either user already has a partner
+    if current_user.partner_id:
+        flash('You already have a partner', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    if partner.partner_id:
+        flash('This user already has a partner', 'danger')
         return redirect(url_for('dashboard'))
     
-    # Check if partnership already exists
-    existing = Partnership.query.filter(
-        ((Partnership.user_id == current_user.id) & (Partnership.partner_id == partner.id)) |
-        ((Partnership.user_id == partner.id) & (Partnership.partner_id == current_user.id))
-    ).first()
+    # Set up partnership
+    current_user.partner_id = partner.id
+    partner.partner_id = current_user.id
     
-    if existing:
-        if existing.status == 'pending':
-            flash('Partnership request already sent', 'info')
-        elif existing.status == 'accepted':
-            flash('You are already partners', 'info')
-        return redirect(url_for('dashboard'))
-    
-    # Create new partnership
-    partnership = Partnership(
-        user_id=current_user.id,
-        partner_id=partner.id,
-        status='pending'
-    )
-    db.session.add(partnership)
     db.session.commit()
-    
-    flash(f'Partnership request sent to {partner_username}', 'success')
+    flash(f'Successfully partnered with {partner.username}!', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/check_in/<int:partnership_id>', methods=['POST'])
+@app.route('/remove_partner', methods=['POST'])
 @login_required
-def check_in(partnership_id):
-    partnership = Partnership.query.get_or_404(partnership_id)
+def remove_partner():
+    if not current_user.partner_id:
+        flash('You don\'t have a partner to remove', 'danger')
+        return redirect(url_for('dashboard'))
     
-    # Verify user is part of the partnership
-    if current_user.id not in [partnership.user_id, partnership.partner_id]:
-        flash('Unauthorized', 'error')
+    partner = current_user.get_partner()
+    if partner:
+        partner.partner_id = None
+    current_user.partner_id = None
+    
+    db.session.commit()
+    flash('Partnership removed successfully', 'success')
+    return redirect(url_for('dashboard'))
+
+@app.route('/check_in', methods=['POST'])
+@login_required
+def check_in():
+    partner = current_user.get_partner()
+    if not partner:
+        flash('You don\'t have a partner to check in with', 'danger')
         return redirect(url_for('dashboard'))
     
     # Check if already checked in today
     today = datetime.utcnow().date()
     existing_checkin = CheckIn.query.filter(
-        CheckIn.partnership_id == partnership_id,
         CheckIn.user_id == current_user.id,
         func.date(CheckIn.created_at) == today
     ).first()
@@ -469,7 +473,6 @@ def check_in(partnership_id):
     
     # Create check-in
     checkin = CheckIn(
-        partnership_id=partnership_id,
         user_id=current_user.id,
         mood=mood,
         message=message
@@ -477,10 +480,11 @@ def check_in(partnership_id):
     db.session.add(checkin)
 
     # Update partnership streak and award points
-    partner_checkin = get_latest_checkin(partnership_id, current_user.id)
-    if partner_checkin and partner_checkin.created_at.date() == today:
-        partnership.check_in_streak += 1
-        # Award points for mutual check-in
+    partner_checkin = CheckIn.query.filter_by(
+        user_id=partner.id,
+        created_at=datetime.utcnow().date()
+    ).first()
+    if partner_checkin:
         current_user.points += 10
         flash('You earned 10 points for checking in with your partner!', 'success')
 
@@ -517,17 +521,16 @@ def complete_goal(goal_id):
 
     return redirect(url_for('dashboard'))
 
-def calculate_points(goal):
-    """Calculate points for completing a goal based on difficulty and streak"""
-    base_points = 10
-    streak_bonus = min(goal.streak * 0.1, 1.0)  # Max 100% bonus for streak
-    difficulty_bonus = (goal.difficulty - 1) * 0.2  # 20% bonus per difficulty level above 1
-    return int(base_points * (1 + streak_bonus + difficulty_bonus))
-
-@app.route('/add_comment/<int:goal_id>', methods=['POST'])
+@app.route('/goals/<int:goal_id>/comments', methods=['POST'])
 @login_required
 def add_comment(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
     content = request.form.get('content')
+    
+    if not content:
+        flash('Comment cannot be empty', 'danger')
+        return redirect(url_for('dashboard'))
+    
     comment = Comment(
         content=content,
         user_id=current_user.id,
@@ -535,7 +538,22 @@ def add_comment(goal_id):
     )
     db.session.add(comment)
     db.session.commit()
+    
+    flash('Comment added successfully', 'success')
     return redirect(url_for('dashboard'))
+
+@app.route('/comments/<int:comment_id>', methods=['DELETE'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    
+    if comment.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    db.session.delete(comment)
+    db.session.commit()
+    
+    return jsonify({'message': 'Comment deleted successfully'})
 
 @app.route('/logout')
 @login_required
@@ -631,49 +649,36 @@ def create_sample_data():
             db.session.add(category)
 
     # Create test users if they don't exist
-    test_user1 = User.query.filter_by(username='john_doe').first()
-    test_user2 = User.query.filter_by(username='jane_doe').first()
-    
+    test_user1 = User.query.filter_by(username='test_user1').first()
     if not test_user1:
         test_user1 = User(
-            username='john_doe',
-            email='john@example.com',
-            password_hash=generate_password_hash('password123')
+            username='test_user1',
+            email='test1@example.com',
+            password_hash=generate_password_hash('password123'),
+            points=100,
+            level=2
         )
         db.session.add(test_user1)
     
+    test_user2 = User.query.filter_by(username='test_user2').first()
     if not test_user2:
         test_user2 = User(
-            username='jane_doe',
-            email='jane@example.com',
-            password_hash=generate_password_hash('password123')
+            username='test_user2',
+            email='test2@example.com',
+            password_hash=generate_password_hash('password123'),
+            points=150,
+            level=3
         )
         db.session.add(test_user2)
     
     db.session.commit()
     
-    # Create partnership if it doesn't exist
-    partnership = Partnership.query.filter_by(
-        user_id=test_user1.id,
-        partner_id=test_user2.id
-    ).first()
-    
-    if not partnership:
-        partnership = Partnership(
-            user_id=test_user1.id,
-            partner_id=test_user2.id,
-            status='accepted'
-        )
-        db.session.add(partnership)
+    # Set up partnership if it doesn't exist
+    if not test_user1.partner_id and not test_user2.partner_id:
+        test_user1.partner_id = test_user2.id
+        test_user2.partner_id = test_user1.id
+        db.session.commit()
         
-        # Create reverse partnership
-        reverse_partnership = Partnership(
-            user_id=test_user2.id,
-            partner_id=test_user1.id,
-            status='accepted'
-        )
-        db.session.add(reverse_partnership)
-    
     # Add sample goals if they don't exist
     if not Goal.query.first():
         health_category = Category.query.filter_by(name='Health & Fitness').first()

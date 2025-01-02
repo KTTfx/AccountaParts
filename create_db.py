@@ -1,6 +1,6 @@
-from app import app, db, User, Badge, Category, Goal, Partnership
+from app import app, db, User, Goal, Category, Badge, UserBadge, CheckIn
 from werkzeug.security import generate_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime
 
 def init_db():
     with app.app_context():
@@ -10,38 +10,7 @@ def init_db():
         # Create all tables
         db.create_all()
         
-        print("Creating sample data...")
-        
-        # Create badges
-        badges_data = [
-            {
-                'name': 'Week Warrior',
-                'description': 'Maintain a 7-day streak',
-                'icon': 'fa-fire',
-                'requirement': 'Maintain a 7-day streak on any goal',
-                'points': 50
-            },
-            {
-                'name': 'Monthly Master',
-                'description': 'Maintain a 30-day streak',
-                'icon': 'fa-crown',
-                'requirement': 'Maintain a 30-day streak on any goal',
-                'points': 200
-            },
-            {
-                'name': 'Century Champion',
-                'description': 'Maintain a 100-day streak',
-                'icon': 'fa-trophy',
-                'requirement': 'Maintain a 100-day streak on any goal',
-                'points': 1000
-            }
-        ]
-
-        for badge_data in badges_data:
-            badge = Badge(**badge_data)
-            db.session.add(badge)
-        
-        # Create categories
+        # Create default categories
         categories_data = [
             {
                 'name': 'Health & Fitness',
@@ -57,12 +26,84 @@ def init_db():
                 'name': 'Personal Growth',
                 'description': 'Self-improvement and lifestyle goals',
                 'color': '#6f42c1'
+            },
+            {
+                'name': 'Relationships',
+                'description': 'Social connections and relationships goals',
+                'color': '#6610f2'
+            },
+            {
+                'name': 'Finance',
+                'description': 'Financial management and planning goals',
+                'color': '#e83e8c'
+            },
+            {
+                'name': 'Hobbies & Recreation',
+                'description': 'Leisure activities and hobbies goals',
+                'color': '#dc3545'
             }
         ]
 
         for category_data in categories_data:
             category = Category(**category_data)
             db.session.add(category)
+        
+        # Create badges
+        badges_data = [
+            {
+                'name': 'Early Bird',
+                'description': 'Complete 5 goals before noon',
+                'icon': 'fa-sun',
+                'requirement': 5
+            },
+            {
+                'name': 'Streak Master',
+                'description': 'Maintain a 7-day streak',
+                'icon': 'fa-fire',
+                'requirement': 7
+            },
+            {
+                'name': 'Goal Crusher',
+                'description': 'Complete 10 goals',
+                'icon': 'fa-trophy',
+                'requirement': 10
+            },
+            {
+                'name': 'Team Player',
+                'description': 'Partner with someone for 30 days',
+                'icon': 'fa-users',
+                'requirement': 30
+            },
+            {
+                'name': 'Perfectionist',
+                'description': 'Complete 5 difficult goals',
+                'icon': 'fa-star',
+                'requirement': 5
+            },
+            {
+                'name': 'Motivator',
+                'description': 'Leave 20 comments on goals',
+                'icon': 'fa-comments',
+                'requirement': 20
+            },
+            {
+                'name': 'Early Achiever',
+                'description': 'Complete 3 goals before deadline',
+                'icon': 'fa-clock',
+                'requirement': 3
+            },
+            {
+                'name': 'Consistency King',
+                'description': 'Complete daily goals for 5 days',
+                'icon': 'fa-crown',
+                'requirement': 5
+            }
+        ]
+
+        for badge_data in badges_data:
+            if not Badge.query.filter_by(name=badge_data['name']).first():
+                badge = Badge(**badge_data)
+                db.session.add(badge)
         
         db.session.commit()
         
@@ -87,20 +128,10 @@ def init_db():
         
         db.session.commit()
         
-        # Create partnership
-        partnership = Partnership(
-            user_id=test_user1.id,
-            partner_id=test_user2.id,
-            status='accepted'
-        )
-        db.session.add(partnership)
-        
-        reverse_partnership = Partnership(
-            user_id=test_user2.id,
-            partner_id=test_user1.id,
-            status='accepted'
-        )
-        db.session.add(reverse_partnership)
+        # Set up partnership between test users
+        test_user1.partner_id = test_user2.id
+        test_user2.partner_id = test_user1.id
+        db.session.commit()
         
         # Create sample goals
         health_category = Category.query.filter_by(name='Health & Fitness').first()
@@ -137,4 +168,5 @@ def init_db():
         db.session.commit()
         print("Database initialized successfully with sample data!")
 
-init_db()
+if __name__ == '__main__':
+    init_db()

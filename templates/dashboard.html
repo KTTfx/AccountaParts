@@ -2,16 +2,330 @@
 
 {% block title %}Dashboard{% endblock %}
 
+{% block styles %}
+<style>
+/* Mobile-first styles */
+.card {
+    margin-bottom: 1rem;
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--bs-light);
+}
+
+.goal-card {
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+.goal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    align-items: center;
+}
+
+.goal-meta .badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.goal-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.goal-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.comment {
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    color: var(--bs-light);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.comment-content {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+.comment-meta {
+    font-size: 0.75rem;
+    color: var(--bs-gray-400);
+}
+
+.mood-btn-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mood-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+}
+
+/* Stats cards */
+.stats-card {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+}
+
+.stats-card h6 {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: var(--bs-gray-400);
+}
+
+.stats-card h3 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--bs-primary);
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .goal-card {
+        padding: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.5rem;
+    }
+    
+    .goal-meta .badge {
+        font-size: 0.875rem;
+    }
+    
+    .comment-content {
+        font-size: 1rem;
+    }
+}
+
+/* Goal title and description */
+.goal-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.25rem;
+}
+
+.goal-description {
+    font-size: 0.875rem;
+    color: var(--bs-gray-400);
+    margin-bottom: 0.75rem;
+}
+
+/* Form controls */
+.form-control {
+    font-size: 0.875rem;
+    background-color: var(--bs-dark);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--bs-light);
+}
+
+.form-control:focus {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--bs-gray-600);
+}
+
+.input-group {
+    margin-bottom: 0.5rem;
+}
+
+.input-group-text {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--bs-light);
+}
+
+/* Badge styles */
+.badges-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.badge-item:hover {
+    transform: scale(1.1);
+}
+
+.badge-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+    color: var(--bs-light);
+    font-size: 1.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.badge-name {
+    font-size: 0.75rem;
+    color: var(--bs-gray-400);
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Stats cards enhancements */
+.stats-card {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.streak-display, .ap-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.streak-display i {
+    color: #ff6b6b;
+    font-size: 1.25rem;
+}
+
+.ap-display i {
+    color: #4dabf7;
+    font-size: 1.25rem;
+}
+
+.stats-card h3 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--bs-light);
+}
+
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 0.5rem;
+    }
+    
+    .stats-card h6 {
+        font-size: 0.75rem;
+    }
+    
+    .stats-card h3 {
+        font-size: 1.25rem;
+    }
+    
+    .streak-display i, .ap-display i {
+        font-size: 1rem;
+    }
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Button styling */
+.btn-outline-primary {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    color: var(--bs-light);
+}
+
+/* Mood buttons */
+.mood-btn-group .btn {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--bs-light);
+}
+
+.mood-btn-group .btn:hover,
+.mood-btn-group .btn.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+}
+
+/* Modal styling */
+.modal-content {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.text-muted {
+    color: var(--bs-gray-400) !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <!-- User Stats Section -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <div class="col-md-4 text-center">
-                            <h4>Level {{ current_user.level }}</h4>
+                        <div class="col-6 col-md-4 text-center">
+                            <h4 class="mb-2">Level {{ current_user.level }}</h4>
                             <div class="progress mb-2">
                                 <div class="progress-bar" role="progressbar" 
                                      style="width: {{ (current_user.points % 100) }}%" 
@@ -20,15 +334,18 @@
                                      aria-valuemax="100">
                                 </div>
                             </div>
-                            <p class="text-muted">{{ current_user.points }} points</p>
+                            <p class="text-muted mb-0">{{ current_user.points }} points</p>
                         </div>
-                        <div class="col-md-8">
-                            <h5>Your Badges</h5>
+                        <div class="col-6 col-md-8">
+                            <h5 class="mb-2">Your Badges</h5>
                             <div class="badges-container">
                                 {% for badge in current_user.badges %}
-                                <span class="badge bg-success me-2" title="{{ badge.description }}">
-                                    <i class="fas {{ badge.icon }}"></i> {{ badge.name }}
-                                </span>
+                                <div class="badge-item" title="{{ badge.description }}">
+                                    <div class="badge-icon">
+                                        <i class="fas {{ badge.icon }}"></i>
+                                    </div>
+                                    <span class="badge-name">{{ badge.name }}</span>
+                                </div>
                                 {% endfor %}
                             </div>
                         </div>
@@ -40,24 +357,38 @@
         <!-- Quick Stats -->
         <div class="col-md-4">
             <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Quick Stats</h5>
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <h6>Goals</h6>
-                            <h3>{{ goals|length }}</h3>
+                <div class="card-body p-2">
+                    <h5 class="card-title mb-2">Quick Stats</h5>
+                    <div class="row g-2">
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>Goals</h6>
+                                <h3>{{ goals|length }}</h3>
+                            </div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <h6>Complete</h6>
-                            <h3>{{ goals|selectattr('completed')|list|length }}</h3>
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>Done</h6>
+                                <h3>{{ goals|selectattr('completed')|list|length }}</h3>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <h6>Streak</h6>
-                            <h3>{{ current_user.current_streak }}</h3>
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>Streak</h6>
+                                <div class="streak-display">
+                                    <i class="fas fa-fire"></i>
+                                    <h3>{{ current_user.current_streak }}</h3>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <h6>Partners</h6>
-                            <h3>{{ partnerships|length }}</h3>
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>AP</h6>
+                                <div class="ap-display">
+                                    <i class="fas fa-handshake"></i>
+                                    <h3>1</h3>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -65,192 +396,127 @@
         </div>
     </div>
 
-    <!-- Partnerships Section -->
+    <!-- Goals Section -->
     <div class="row">
         <div class="col-md-8">
-            <!-- Goals Section -->
-            <div class="card mb-4">
+            <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Your Goals</h4>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+                        <h4 class="card-title mb-0">Goals</h4>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addGoalModal">
                             <i class="fas fa-plus"></i> Add Goal
                         </button>
                     </div>
 
-                    <!-- Goal Categories -->
-                    <div class="mb-3">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
-                            {% for category in categories %}
-                            <button type="button" class="btn btn-outline-primary" data-filter="{{ category.name|lower }}">
-                                {{ category.name }}
-                            </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- Goals List -->
-                    <div class="goals-container">
+                    {% if goals %}
                         {% for goal in goals %}
-                        <div class="card mb-3 goal-card" data-category="{{ goal.category.name|lower }}">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h5 class="card-title">{{ goal.title }}</h5>
-                                        <p class="card-text">{{ goal.description }}</p>
-                                        <div class="badges">
+                            <div class="goal-card" data-category="{{ goal.category.name }}">
+                                <div class="d-flex flex-column flex-md-row justify-content-between">
+                                    <div class="flex-grow-1">
+                                        <h5 class="goal-title">{{ goal.title }}</h5>
+                                        <p class="goal-description">{{ goal.description }}</p>
+                                        <div class="goal-meta">
                                             <span class="badge bg-primary">{{ goal.category.name }}</span>
-                                            <span class="badge bg-info">{{ goal.difficulty }}/5 Difficulty</span>
-                                            {% if goal.streak > 0 %}
-                                            <span class="badge bg-warning">
-                                                {{ goal.streak }} Day Streak 🔥
-                                            </span>
-                                            {% endif %}
-                                            {% if goal.completed %}
-                                            <span class="badge bg-success">Completed</span>
-                                            {% endif %}
+                                            <span class="badge bg-secondary">{{ goal.goal_type }}</span>
+                                            <span class="badge bg-info">{{ goal.difficulty }} points</span>
+                                            <small class="text-muted">Due: {{ goal.deadline.strftime('%Y-%m-%d') }}</small>
                                         </div>
                                     </div>
-                                    {% if not goal.completed %}
-                                    <div>
-                                        <form action="{{ url_for('complete_goal', goal_id=goal.id) }}" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-check"></i> Complete
-                                            </button>
-                                        </form>
+                                    <div class="goal-actions mt-2 mt-md-0">
+                                        <button class="btn btn-success btn-sm" onclick="completeGoal({{ goal.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteGoal({{ goal.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
-                                    {% endif %}
+                                </div>
+
+                                <!-- Comments Section -->
+                                <div class="comments-section mt-3">
+                                    <h6 class="mb-2">Comments</h6>
+                                    {% set comments = goal.comments|sort(attribute='created_at', reverse=true) %}
+                                    <div class="comments-list">
+                                        {% for comment in comments %}
+                                            <div class="comment" data-comment-id="{{ comment.id }}">
+                                                <div class="comment-header">
+                                                    <div>
+                                                        <strong class="me-2">{{ comment.author.username }}</strong>
+                                                        <span class="comment-meta">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                                    </div>
+                                                    {% if comment.user_id == current_user.id %}
+                                                        <button class="btn btn-link btn-sm text-danger p-0" 
+                                                                onclick="deleteComment({{ comment.id }})"
+                                                                title="Delete comment">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="comment-content">{{ comment.content }}</p>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <form action="{{ url_for('add_comment', goal_id=goal.id) }}" method="post" class="comment-form mt-2">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control form-control-sm" name="content" placeholder="Add a comment..." required>
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
-                        </div>
                         {% endfor %}
-                    </div>
+                    {% else %}
+                        <p class="text-muted text-center">No goals yet. Add your first goal!</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
             <!-- Partnerships -->
-            <div class="card mb-4">
+            <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Partnerships</h4>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
-                            <i class="fas fa-user-plus"></i> Add Partner
-                        </button>
-                    </div>
-
-                    {% if partnerships %}
-                        {% for partnership in partnerships %}
-                            {% if partnership.status == 'accepted' %}
-                                <div class="partnership-card mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h5 class="mb-0">
-                                            {% if partnership.user_id == current_user.id %}
-                                                {{ partnership.partner.username }}
-                                            {% else %}
-                                                {{ partnership.user.username }}
-                                            {% endif %}
-                                        </h5>
-                                        <span class="badge bg-success">{{ partnership.check_in_streak }} day streak</span>
+                    <h5 class="card-title">
+                        <i class="fas fa-users"></i> Partnership
+                    </h5>
+                    
+                    {% if partner %}
+                        <div class="partnership-info">
+                            <h6 class="mb-3">Your Partner: {{ partner.username }}</h6>
+                            
+                            <!-- Check-in Form -->
+                            <form action="{{ url_for('check_in') }}" method="post" class="mb-3">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">How are you feeling today?</label>
+                                    <div class="mood-btn-group">
+                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😊">😊</button>
+                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😐">😐</button>
+                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😔">😔</button>
+                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="💪">💪</button>
                                     </div>
-
-                                    {% set partner_checkin = get_latest_checkin(partnership.id, current_user.id) %}
-                                    {% set my_checkin = get_my_latest_checkin(partnership.id, current_user.id) %}
-                                    
-                                    <!-- Check-in Status -->
-                                    <div class="checkin-status mb-3">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Your Status:</small><br>
-                                                {% if my_checkin and my_checkin.created_at.date() == today %}
-                                                    <span class="text-success">
-                                                        <i class="fas fa-check"></i> Checked in
-                                                        {% if my_checkin.mood == 5 %}😊
-                                                        {% elif my_checkin.mood == 4 %}🙂
-                                                        {% elif my_checkin.mood == 3 %}😐
-                                                        {% else %}😔
-                                                        {% endif %}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-warning">
-                                                        <i class="fas fa-clock"></i> Not checked in
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Partner's Status:</small><br>
-                                                {% if partner_checkin and partner_checkin.created_at.date() == today %}
-                                                    <span class="text-success">
-                                                        <i class="fas fa-check"></i> Checked in
-                                                        {% if partner_checkin.mood == 5 %}😊
-                                                        {% elif partner_checkin.mood == 4 %}🙂
-                                                        {% elif partner_checkin.mood == 3 %}😐
-                                                        {% else %}😔
-                                                        {% endif %}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-warning">
-                                                        <i class="fas fa-clock"></i> Not checked in
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {% if not my_checkin or my_checkin.created_at.date() != today %}
-                                        <form action="{{ url_for('check_in', partnership_id=partnership.id) }}" method="post">
-                                            <div class="mb-3">
-                                                <label class="form-label">How are you feeling today?</label>
-                                                <div class="btn-group w-100" role="group">
-                                                    <input type="radio" class="btn-check" name="mood" value="5" id="mood5_{{ partnership.id }}" required>
-                                                    <label class="btn btn-outline-success" for="mood5_{{ partnership.id }}">😊</label>
-                                                    
-                                                    <input type="radio" class="btn-check" name="mood" value="4" id="mood4_{{ partnership.id }}">
-                                                    <label class="btn btn-outline-primary" for="mood4_{{ partnership.id }}">🙂</label>
-                                                    
-                                                    <input type="radio" class="btn-check" name="mood" value="3" id="mood3_{{ partnership.id }}">
-                                                    <label class="btn btn-outline-warning" for="mood3_{{ partnership.id }}">😐</label>
-                                                    
-                                                    <input type="radio" class="btn-check" name="mood" value="2" id="mood2_{{ partnership.id }}">
-                                                    <label class="btn btn-outline-danger" for="mood2_{{ partnership.id }}">😔</label>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Message for your partner:</label>
-                                                <textarea class="form-control" name="message" rows="2"></textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary w-100">Check In</button>
-                                        </form>
-                                    {% else %}
-                                        <div class="alert alert-success">
-                                            <i class="fas fa-check-circle"></i> You've checked in today!
-                                            {% if my_checkin.message %}
-                                                <div class="mt-2">
-                                                    <small class="text-muted">Your message:</small><br>
-                                                    {{ my_checkin.message }}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
-
-                                    {% if partner_checkin and partner_checkin.created_at.date() == today and partner_checkin.message %}
-                                        <div class="alert alert-info mt-3">
-                                            <small class="text-muted">Partner's message:</small><br>
-                                            {{ partner_checkin.message }}
-                                        </div>
-                                    {% endif %}
+                                    <input type="hidden" name="mood" id="selected-mood" required>
                                 </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center">
-                            <p class="text-muted">No active partnerships</p>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPartnerModal">
-                                <i class="fas fa-user-plus"></i> Add Your First Partner
-                            </button>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Message for your partner:</label>
+                                    <textarea class="form-control form-control-sm" name="message" rows="2" placeholder="Share your thoughts..."></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-check-circle me-1"></i> Check In
+                                </button>
+                            </form>
                         </div>
+                    {% else %}
+                        <p class="text-muted mb-3">You don't have a partner yet. Add one to start tracking goals together!</p>
+                        <form action="{{ url_for('add_partner') }}" method="post" class="input-group">
+                            <input type="text" class="form-control form-control-sm" name="partner_username" placeholder="Enter username">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
             </div>
@@ -283,6 +549,18 @@
                             <option value="{{ category.id }}">{{ category.name }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Goal Type</label>
+                        <select class="form-select" name="goal_type" required>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Deadline</label>
+                        <input type="datetime-local" class="form-control" name="deadline" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Difficulty (1-5)</label>
@@ -351,6 +629,92 @@
                     card.style.display = 'none';
                 }
             });
+        });
+    });
+
+    function deleteComment(commentId) {
+        if (confirm('Are you sure you want to delete this comment?')) {
+            fetch(`/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Remove the comment element from the DOM
+                    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (commentElement) {
+                        commentElement.remove();
+                    }
+                } else {
+                    alert('Failed to delete comment');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the comment');
+            });
+        }
+    }
+
+    function completeGoal(goalId) {
+        if (confirm('Mark this goal as complete?')) {
+            fetch(`/goals/${goalId}/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to complete goal');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while completing the goal');
+            });
+        }
+    }
+
+    function deleteGoal(goalId) {
+        if (confirm('Are you sure you want to delete this goal?')) {
+            fetch(`/goals/${goalId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete goal');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the goal');
+            });
+        }
+    }
+
+    // Mood button selection
+    document.querySelectorAll('.mood-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Set the mood value in hidden input
+            document.getElementById('selected-mood').value = this.dataset.mood;
         });
     });
 </script>
