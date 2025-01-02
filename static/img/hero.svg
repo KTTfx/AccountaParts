@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#F8F9FA" x="0" y="0" width="800" height="600"/>
+        <g transform="translate(100, 100)">
+            <circle fill="#007BFF" cx="300" cy="200" r="150"/>
+            <rect fill="#28A745" x="250" y="150" width="100" height="100"/>
+            <polygon fill="#DC3545" points="300,50 350,150 250,150"/>
+        </g>
+        <text font-family="Arial" font-size="24" fill="#212529" x="400" y="300" text-anchor="middle">
+            Achieve Goals Together
+        </text>
+    </g>
+</svg>

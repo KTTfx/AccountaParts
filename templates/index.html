@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-75">
+    <div class="col-md-6">
+        <h1 class="display-4 mb-4">Welcome to AccountaParts</h1>
+        <p class="lead mb-4">
+            Achieve your goals together with friends and partners. Set daily, weekly, or yearly goals,
+            track progress, and support each other along the way.
+        </p>
+        <div class="d-grid gap-2 d-md-flex">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-md-2">Get Started</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <img src="{{ url_for('static', filename='img/hero.svg') }}" alt="Goal tracking illustration" class="img-fluid">
+    </div>
+</div>
+
+<div class="row mt-5 py-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
+                <h3>Set Goals Together</h3>
+                <p>Create and share goals with your accountability partner. Daily, weekly, or yearly - you decide!</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                <h3>Track Progress</h3>
+                <p>Mark tasks as complete and see your partner's progress in real-time.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-comments fa-3x text-primary mb-3"></i>
+                <h3>Stay Connected</h3>
+                <p>Comment on goals and share encouragement with your accountability partner.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

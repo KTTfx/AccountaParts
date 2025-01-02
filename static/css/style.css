@@ -1,0 +1,72 @@
+/* Custom styles */
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.goals-container .card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.comment-bubble {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+.badge {
+    padding: 0.5em 0.8em;
+}
+
+.bg-daily {
+    background-color: #28a745;
+}
+
+.bg-weekly {
+    background-color: #007bff;
+}
+
+.bg-yearly {
+    background-color: #6f42c1;
+}
+
+/* Animations */
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+    opacity: 1;
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transition: opacity 300ms ease-in;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+}
