@@ -222,21 +222,14 @@ def login():
 def dashboard():
     categories = Category.query.all()
     goals = Goal.query.filter_by(user_id=current_user.id).order_by(Goal.created_at.desc()).all()
-    
-    # Get all accepted partnerships where the current user is either the user or partner
     partnerships = Partnership.query.filter(
-        db.or_(
-            db.and_(Partnership.user_id == current_user.id, Partnership.status == 'accepted'),
-            db.and_(Partnership.partner_id == current_user.id, Partnership.status == 'accepted')
-        )
+        (Partnership.user_id == current_user.id) | 
+        (Partnership.partner_id == current_user.id)
     ).all()
-    
-    partner_goals = []
-    for partnership in partnerships:
-        partner_id = partnership.partner_id if partnership.user_id == current_user.id else partnership.user_id
-        partner_goals.extend(Goal.query.filter_by(user_id=partner_id).all())
-    
-    return render_template('dashboard.html', categories=categories, goals=goals, partner_goals=partner_goals)
+    return render_template('dashboard.html', 
+                         categories=categories, 
+                         goals=goals, 
+                         partnerships=partnerships)
 
 @app.route('/categories')
 @login_required
