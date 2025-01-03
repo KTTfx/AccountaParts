@@ -643,6 +643,39 @@ body, .card, .modal-content, .dropdown-menu, .form-control, .form-select, .navba
     100% { transform: translateY(0px); }
 }
 
+/* Hero Icon */
+.hero-icon {
+    font-size: 12rem;
+    color: var(--primary-color);
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (min-width: 769px) {
+    .hero-icon {
+        display: block;
+    }
+    .hero-image-container {
+        position: relative;
+        height: 400px;
+    }
+    .hero-image-container img {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-icon {
+        display: none;
+    }
+    .hero-image-container img {
+        display: block;
+    }
+}
+
 /* Feature Cards */
 .feature-card {
     padding: 2rem;
