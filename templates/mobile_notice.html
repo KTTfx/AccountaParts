@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mobile-notice-container">
+    <div class="mobile-notice-card">
+        <div class="notice-content">
+            <div class="notice-header">
+                <div class="logo-section">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h1>AccountaParts</h1>
+                </div>
+                <p class="tagline">Your Accountability Journey Goes Mobile</p>
+            </div>
+
+            <div class="main-content">
+                <div class="qr-section">
+                    <div class="qr-container">
+                        <div class="qr-wrapper" id="qrWrapper">
+                            <img src="{{ url_for('generate_qr') }}" alt="QR Code" id="qrCode">
+                            <div class="scan-line"></div>
+                        </div>
+                        <div class="qr-instruction">
+                            <div class="instruction-step">
+                                <i class="fas fa-camera"></i>
+                                <span>Open camera</span>
+                            </div>
+                            <div class="instruction-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="instruction-step">
+                                <i class="fas fa-qrcode"></i>
+                                <span>Scan code</span>
+                            </div>
+                            <div class="instruction-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="instruction-step">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Start</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h3>Track Goals</h3>
+                        <p>Track progress seamlessly</p>
+                    </div>
+                    
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Partner Up</h3>
+                        <p>Stay connected together</p>
+                    </div>
+                    
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="feature-icon">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <h3>Earn Points</h3>
+                        <p>Complete goals, earn rewards</p>
+                    </div>
+                    
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Progress</h3>
+                        <p>View detailed analytics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, #2c5282 100%);
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --feature-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .mobile-notice-container {
+        height: 100vh;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mobile-notice-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .mobile-notice-card {
+        background: white;
+        border-radius: 30px;
+        width: 100%;
+        max-width: 1000px;
+        height: calc(100vh - 2rem);
+        margin: 0 auto;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .notice-content {
+        padding: 2rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .notice-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .logo-section i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .logo-section h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    .tagline {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .main-content {
+        flex: 1;
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qr-section {
+        flex: 0 0 auto;
+    }
+
+    .qr-container {
+        text-align: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 1.5rem;
+        border-radius: 20px;
+    }
+
+    .qr-wrapper {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--feature-shadow);
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .qr-wrapper:hover {
+        transform: scale(1.02);
+    }
+
+    .qr-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+        animation: scan 2s linear infinite;
+        opacity: 0.5;
+    }
+
+    .qr-instruction {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+
+    .instruction-step {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .instruction-step i {
+        color: var(--primary-color);
+    }
+
+    .instruction-arrow {
+        color: var(--primary-color);
+        animation: pulse 2s infinite;
+        font-size: 0.8rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        flex: 0 0 auto;
+    }
+
+    .feature-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: var(--feature-shadow);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-gradient);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+    }
+
+    .feature-icon i {
+        font-size: 1rem;
+        color: white;
+    }
+
+    .feature-card h3 {
+        color: var(--text-color);
+        font-size: 0.9rem;
+        margin: 0 0 0.25rem;
+        font-weight: 600;
+    }
+
+    .feature-card p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes scan {
+        0% { transform: translateY(0); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: translateY(200px); opacity: 0; }
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    @media (max-width: 768px) {
+        .mobile-notice-container {
+            display: none;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .main-content {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .features-grid {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qrWrapper = document.getElementById('qrWrapper');
+    const qrCode = document.getElementById('qrCode');
+
+    // Add hover effect
+    qrWrapper.addEventListener('mouseover', function() {
+        qrCode.style.transform = 'scale(1.05)';
+        qrCode.style.transition = 'transform 0.3s ease';
+    });
+
+    qrWrapper.addEventListener('mouseout', function() {
+        qrCode.style.transform = 'scale(1)';
+    });
+
+    // Add feature cards animation
+    const cards = document.querySelectorAll('.feature-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * (index + 1));
+    });
+});
+</script>
+{% endblock %}
