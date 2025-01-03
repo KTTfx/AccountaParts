@@ -201,34 +201,43 @@ a:hover {
 
 /* Flash Messages */
 .alert {
-    margin-bottom: 1rem;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+    margin-bottom: 0;
+    min-width: 300px;
+    max-width: 500px;
     border: none;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: slideIn 0.5s ease-out;
 }
 
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.alert-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-}
-
-.alert-dismissible .btn-close {
-    padding: 1.25rem;
+.alert.fade-out {
+    animation: slideOut 0.5s ease-in forwards;
 }
 
 /* Footer */
