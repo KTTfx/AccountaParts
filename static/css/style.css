@@ -644,6 +644,21 @@ body, .card, .modal-content, .dropdown-menu, .form-control, .form-select, .navba
 }
 
 /* Hero Icon */
+@keyframes tickAnimation {
+    0% {
+        transform: translate(-50%, -50%) scale(0.9) rotate(-5deg);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.9) rotate(-5deg);
+        opacity: 0.8;
+    }
+}
+
 .hero-icon {
     font-size: 12rem;
     color: var(--primary-color);
@@ -652,6 +667,15 @@ body, .card, .modal-content, .dropdown-menu, .form-control, .form-select, .navba
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    animation: tickAnimation 3s ease-in-out infinite;
+    text-shadow: 0 0 30px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.hero-icon:hover {
+    animation-play-state: paused;
+    transform: translate(-50%, -50%) scale(1.2);
+    text-shadow: 0 0 40px rgba(0, 123, 255, 0.5);
 }
 
 @media (min-width: 769px) {
