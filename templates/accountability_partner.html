@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Accountability Partner{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Partner Profile Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="partner-avatar">
+                            <i class="fas fa-user-circle fa-3x text-primary"></i>
+                        </div>
+                        <div class="partner-info">
+                            <h4 class="mb-1">{{ partner.username }}</h4>
+                            <div class="partner-meta d-flex align-items-center gap-3">
+                                <span class="text-muted">
+                                    <i class="fas fa-trophy text-warning"></i>
+                                    Level {{ partner.level }}
+                                </span>
+                                <span class="text-muted">
+                                    <i class="fas fa-star text-warning"></i>
+                                    {{ partner.points }} points
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partner Stats -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-3">
+                            <div class="stats-card">
+                                <h6>Goals</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-tasks text-primary"></i>
+                                    <span class="stats-count">{{ partner_stats.total_goals }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stats-card">
+                                <h6>Done</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span class="stats-count">{{ partner_stats.completed_goals }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stats-card">
+                                <h6>Streak</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-fire text-warning"></i>
+                                    <span class="stats-count">{{ partner_stats.current_streak }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stats-card">
+                                <h6>Points</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span class="stats-count">{{ partner_stats.points }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Latest Check-in -->
+                    {% if latest_checkin %}
+                    <div class="latest-checkin p-3 rounded mb-3" style="background: var(--bg-color);">
+                        <h6 class="mb-2">
+                            <i class="fas fa-comment-alt text-primary me-2"></i>
+                            Latest Check-in
+                        </h6>
+                        <div class="checkin-content">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="mood-indicator">
+                                    {% set mood_icons = {
+                                        'great': 'fa-grin-stars text-success',
+                                        'good': 'fa-smile text-primary',
+                                        'okay': 'fa-meh text-warning',
+                                        'bad': 'fa-frown text-danger'
+                                    } %}
+                                    <i class="fas {{ mood_icons.get(latest_checkin.mood, 'fa-smile') }}"></i>
+                                </span>
+                                <small class="text-muted">
+                                    {{ latest_checkin.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                            <p class="mb-0">{{ latest_checkin.message }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="location.href='{{ url_for('check_in') }}'">
+                            <i class="fas fa-comment-alt me-2"></i>Check-in
+                        </button>
+                        <form action="{{ url_for('remove_partner') }}" method="POST" onsubmit="return confirm('Are you sure you want to remove your accountability partner?');">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-user-minus me-2"></i>Remove Partner
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partner Goals Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Partner's Goals</h5>
+                    {% if partner_goals %}
+                        {% for goal in partner_goals %}
+                        <div class="goal-card mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">{{ goal.title }}</h5>
+                                    <p class="text-muted mb-2">{{ goal.description }}</p>
+                                    <div class="goal-meta">
+                                        {% if goal.category %}
+                                        <span class="badge" style="background-color: {{ goal.category.color }}">
+                                            {{ goal.category.name }}
+                                        </span>
+                                        {% endif %}
+                                        {% if goal.deadline %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            {{ goal.deadline.strftime('%Y-%m-%d') }}
+                                        </span>
+                                        {% endif %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-star me-1"></i>
+                                            {{ goal.points_reward }} pts
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="goal-status">
+                                    {% if goal.completed %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Completed
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>In Progress
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if goal.comments %}
+                            <div class="comments-section mt-3">
+                                <h6 class="mb-2">
+                                    <i class="fas fa-comments text-primary me-2"></i>
+                                    Recent Comments
+                                </h6>
+                                {% for comment in goal.comments[-2:] %}
+                                <div class="comment">
+                                    <div class="comment-header">
+                                        <strong>{{ comment.author.username }}</strong>
+                                        <small class="text-muted">
+                                            {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </div>
+                                    <p class="comment-content">{{ comment.content }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="goal-actions mt-3">
+                                <button class="btn btn-sm btn-outline-primary" onclick="location.href='#'">
+                                    <i class="fas fa-comment me-1"></i>Comment
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="location.href='#'">
+                                    <i class="fas fa-heart me-1"></i>Encourage
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Your partner hasn't added any goals yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.partner-avatar {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-color);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.partner-meta {
+    font-size: 0.9rem;
+}
+
+.stats-card {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+    height: 100%;
+}
+
+.stats-card h6 {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--bs-gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.stats-display i {
+    font-size: 1.1rem;
+}
+
+.stats-count {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--bs-light);
+}
+
+.latest-checkin {
+    border: 1px solid var(--border-color);
+}
+
+.mood-indicator i {
+    font-size: 1.25rem;
+}
+
+.goal-card {
+    padding: 1.25rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+}
+
+.goal-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.goal-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.comment {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment:last-child {
+    margin-bottom: 0;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.comment-content {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .partner-avatar {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .partner-avatar i {
+        font-size: 2em;
+    }
+    
+    .stats-card {
+        padding: 0.5rem;
+    }
+    
+    .stats-count {
+        font-size: 1.25rem;
+    }
+    
+    .goal-card {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}

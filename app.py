@@ -11,10 +11,9 @@ from sqlalchemy import func
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///accountaparts.db')
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///accountaparts.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 db = SQLAlchemy(app)
@@ -25,7 +24,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     points = db.Column(db.Integer, default=0)
     level = db.Column(db.Integer, default=1)
@@ -34,21 +33,16 @@ class User(UserMixin, db.Model):
     
     # Relationships
     goals = db.relationship('Goal', backref='user', lazy=True)
-    checkins = db.relationship('CheckIn', backref='user', lazy=True)
-    partnerships = db.relationship('Partnership', 
-                                 foreign_keys='Partnership.user_id',
-                                 backref='user', 
-                                 lazy=True)
-    partner_in = db.relationship('Partnership',
-                               foreign_keys='Partnership.partner_id',
-                               backref='partner',
-                               lazy=True)
+    check_ins = db.relationship('CheckIn', backref='user', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
     
     def get_partner(self):
         if self.partner_id:
             return User.query.get(self.partner_id)
         return None
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
 class Badge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -94,6 +88,9 @@ class Goal(db.Model):
     points_reward = db.Column(db.Integer, default=10)
     streak = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed = db.Column(db.Boolean, default=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    last_streak_update = db.Column(db.DateTime, nullable=True)
     tags = db.relationship('Tag', secondary=goal_tags, lazy='subquery',
         backref=db.backref('goals', lazy=True))
     comments = db.relationship('Comment', backref=db.backref('target_goal', lazy=True), lazy=True)
@@ -123,21 +120,25 @@ class Comment(db.Model):
 
 # Helper functions
 def calculate_points(goal):
-    base_points = 10
-    difficulty_multiplier = goal.difficulty
-    streak_multiplier = max(1, min(2, goal.streak / 10))  # Cap at 2x multiplier
-    return int(base_points * difficulty_multiplier * streak_multiplier)
+    """Calculate points for completing a goal based on difficulty and streak"""
+    base_points = goal.points_reward or 10  # Use goal's points_reward or default to 10
+    difficulty_multiplier = goal.difficulty or 1  # Use goal's difficulty or default to 1
+    streak_bonus = min(goal.streak * 0.1, 1.0)  # 10% bonus per streak, max 100% bonus
+    
+    total_points = int(base_points * (1 + difficulty_multiplier * streak_bonus))
+    return max(total_points, 1)  # Ensure at least 1 point is awarded
 
 def update_streak(goal):
-    today = datetime.utcnow().date()
-    if goal.last_streak_update:
-        days_diff = (today - goal.last_streak_update.date()).days
+    """Update the goal's streak based on completion time"""
+    if not goal.last_streak_update:
+        goal.streak = 1
+    else:
+        days_diff = (datetime.utcnow().date() - goal.last_streak_update.date()).days
         if days_diff == 1:  # Consecutive day
             goal.streak += 1
         elif days_diff > 1:  # Streak broken
             goal.streak = 1
-    else:
-        goal.streak = 1
+    
     goal.last_streak_update = datetime.utcnow()
 
 def check_and_award_badges(user):
@@ -236,7 +237,7 @@ def register():
             return redirect(url_for('register'))
             
         user = User(username=username, email=email)
-        user.password_hash = generate_password_hash(password)
+        user.set_password(password)
         
         db.session.add(user)
         db.session.commit()
@@ -436,7 +437,7 @@ def remove_partner():
         flash('You don\'t have a partner to remove', 'danger')
         return redirect(url_for('dashboard'))
     
-    partner = current_user.get_partner()
+    partner = User.query.get(current_user.partner_id)
     if partner:
         partner.partner_id = None
     current_user.partner_id = None
@@ -501,25 +502,26 @@ def complete_goal(goal_id):
     goal = Goal.query.get_or_404(goal_id)
     if goal.user_id != current_user.id:
         flash('Unauthorized', 'error')
-        return redirect(url_for('dashboard'))
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     if not goal.completed:
         # Calculate points based on difficulty and streak
         points = calculate_points(goal)
         current_user.points += points
+        
+        # Update the goal
         goal.completed = True
         goal.completed_at = datetime.utcnow()
-
-        # Update user level (every 100 points = 1 level)
-        current_user.level = (current_user.points // 100) + 1
-
-        # Check for badge achievements
+        
+        # Update streak and check for badges
+        update_streak(goal)
         check_and_award_badges(current_user)
-
+        
         db.session.commit()
         flash(f'Goal completed! You earned {points} points!', 'success')
-
-    return redirect(url_for('dashboard'))
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'message': 'Goal is already completed'})
 
 @app.route('/goals/<int:goal_id>/comments', methods=['POST'])
 @login_required
@@ -555,11 +557,53 @@ def delete_comment(comment_id):
     
     return jsonify({'message': 'Comment deleted successfully'})
 
+@app.route('/delete_goal/<int:goal_id>', methods=['POST'])
+@login_required
+def delete_goal(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
+    if goal.user_id != current_user.id:
+        flash('Unauthorized', 'error')
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    db.session.delete(goal)
+    db.session.commit()
+    flash('Goal deleted successfully', 'success')
+    return jsonify({'success': True})
+
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/how-it-works')
+def how_it_works():
+    return render_template('how_it_works.html')
+
+@app.route('/accountability_partner')
+@login_required
+def accountability_partner():
+    partner = current_user.get_partner()
+    if not partner:
+        flash('You need to add an accountability partner first!', 'warning')
+        return redirect(url_for('dashboard'))
+        
+    partner_goals = Goal.query.filter_by(user_id=partner.id).order_by(Goal.created_at.desc()).all()
+    partner_stats = {
+        'total_goals': len(partner_goals),
+        'completed_goals': len([g for g in partner_goals if g.completed]),
+        'current_streak': partner.current_streak if hasattr(partner, 'current_streak') else 0,
+        'points': partner.points
+    }
+    
+    # Get partner's latest check-in
+    latest_checkin = CheckIn.query.filter_by(user_id=partner.id).order_by(CheckIn.created_at.desc()).first()
+    
+    return render_template('accountability_partner.html', 
+                         partner=partner,
+                         partner_goals=partner_goals,
+                         partner_stats=partner_stats,
+                         latest_checkin=latest_checkin)
 
 # Create test users and sample data
 def create_sample_data():
@@ -650,25 +694,16 @@ def create_sample_data():
 
     # Create test users if they don't exist
     test_user1 = User.query.filter_by(username='test_user1').first()
+    test_user2 = User.query.filter_by(username='test_user2').first()
+    
     if not test_user1:
-        test_user1 = User(
-            username='test_user1',
-            email='test1@example.com',
-            password_hash=generate_password_hash('password123'),
-            points=100,
-            level=2
-        )
+        test_user1 = User(username='test_user1', email='test1@example.com')
+        test_user1.set_password('password123')
         db.session.add(test_user1)
     
-    test_user2 = User.query.filter_by(username='test_user2').first()
     if not test_user2:
-        test_user2 = User(
-            username='test_user2',
-            email='test2@example.com',
-            password_hash=generate_password_hash('password123'),
-            points=150,
-            level=3
-        )
+        test_user2 = User(username='test_user2', email='test2@example.com')
+        test_user2.set_password('password123')
         db.session.add(test_user2)
     
     db.session.commit()
@@ -734,4 +769,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         create_sample_data()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

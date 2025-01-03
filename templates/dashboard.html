@@ -93,18 +93,54 @@
     padding: 0.75rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 0.375rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .stats-card h6 {
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
     color: var(--bs-gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.stats-card h3 {
+.stats-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.stats-display i {
+    font-size: 1.1rem;
+}
+
+.stats-count {
     font-size: 1.5rem;
-    margin: 0;
-    color: var(--bs-primary);
+    font-weight: 600;
+    color: var(--bs-light);
+}
+
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 0.5rem;
+    }
+    
+    .stats-card h6 {
+        font-size: 0.7rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-count {
+        font-size: 1.25rem;
+    }
+    
+    .stats-display i {
+        font-size: 1rem;
+    }
 }
 
 /* Responsive adjustments */
@@ -313,40 +349,385 @@
 .text-muted {
     color: var(--bs-gray-400) !important;
 }
+
+/* Level and Badges Styling */
+.level-card {
+    padding: 0.875rem;
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.level-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.level-badge i {
+    font-size: 1.4rem;
+}
+
+.level-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.level-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.level-number {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.level-progress {
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.level-progress .progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--border-color);
+}
+
+.points-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.progress-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .level-badge {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .level-badge i {
+        font-size: 1.2rem;
+    }
+    
+    .level-number {
+        font-size: 1.1rem;
+    }
+    
+    .level-label {
+        font-size: 0.7rem;
+    }
+}
+
+.badges-section {
+    padding: 1rem;
+}
+
+.badges-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.badge-item {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.badge-item:hover {
+    transform: translateY(-2px);
+}
+
+.badge-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+}
+
+.badge-icon i {
+    color: white;
+    font-size: 1.25rem;
+}
+
+.badge-name {
+    font-size: 0.75rem;
+    color: var(--text-color);
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Badge colors */
+.bg-primary { background: var(--primary-color); }
+.bg-success { background: var(--success-color); }
+.bg-warning { background: var(--warning-color); }
+.bg-danger { background: var(--danger-color); }
+.bg-info { background: var(--info-color); }
+
+@media (max-width: 768px) {
+    .badges-container {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+    
+    .badge-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .badge-icon i {
+        font-size: 1rem;
+    }
+}
+
+/* Current Badge Display */
+.current-badge-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.current-badge {
+    text-align: center;
+    max-width: 220px;
+}
+
+.badge-display {
+    padding: 1.5rem;
+    background: var(--bg-color);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.badge-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border: 2px solid var(--border-color);
+}
+
+.badge-icon i {
+    color: white;
+    font-size: 1.75rem;
+}
+
+.badge-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.badge-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .badge-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .badge-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .badge-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Level card styling */
+.level-card {
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.level-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-color);
+}
+
+.level-progress {
+    margin-top: 0.75rem;
+}
+
+.level-progress .progress {
+    height: 6px;
+    margin-bottom: 0.25rem;
+}
+
+.level-progress small {
+    font-size: 0.75rem;
+}
+
+/* Current badge card */
+.current-badge-card {
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.badge-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.badge-icon i {
+    color: white;
+    font-size: 1.25rem;
+}
+
+.badge-title {
+    font-size: 1rem;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.badge-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .level-badge, .badge-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .level-badge i, .badge-icon i {
+        font-size: 1.1rem;
+    }
+    
+    .badge-title {
+        font-size: 0.9rem;
+    }
+    
+    .badge-description {
+        font-size: 0.75rem;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
     <!-- User Stats Section -->
-    <div class="row mb-3">
+    <div class="row mb-4">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-6 col-md-4 text-center">
-                            <h4 class="mb-2">Level {{ current_user.level }}</h4>
-                            <div class="progress mb-2">
-                                <div class="progress-bar" role="progressbar" 
-                                     style="width: {{ (current_user.points % 100) }}%" 
-                                     aria-valuenow="{{ current_user.points % 100 }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
+                    <div class="row">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="level-card text-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="level-badge">
+                                        {% set level_badge = {
+                                            1: "fa-star-of-life text-info",
+                                            2: "fa-seedling text-success",
+                                            3: "fa-leaf text-success",
+                                            4: "fa-tree text-success",
+                                            5: "fa-star text-warning",
+                                            6: "fa-crown text-warning",
+                                            7: "fa-gem text-info",
+                                            8: "fa-trophy text-danger",
+                                            9: "fa-medal text-danger",
+                                            10: "fa-award text-primary"
+                                        } %}
+                                        {% set current_badge = level_badge.get(current_user.level, "fa-award text-primary") %}
+                                        <i class="fas {{ current_badge }}"></i>
+                                    </div>
+                                    <div class="level-info">
+                                        <div class="d-flex align-items-baseline gap-1">
+                                            <span class="level-label">Level</span>
+                                            <span class="level-number">{{ current_user.level }}</span>
+                                        </div>
+                                        <div class="level-progress">
+                                            <div class="progress">
+                                                {% set progress = (current_user.points % 100) %}
+                                                <div class="progress-bar bg-primary" role="progressbar" 
+                                                     style="width: {{ progress }}%;" 
+                                                     aria-valuenow="{{ progress }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <small class="points-text">{{ current_user.points }} pts</small>
+                                                <small class="progress-text">{{ progress }}/100</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="text-muted mb-0">{{ current_user.points }} points</p>
                         </div>
-                        <div class="col-6 col-md-8">
-                            <h5 class="mb-2">Your Badges</h5>
-                            <div class="badges-container">
-                                {% for badge in current_user.badges %}
-                                <div class="badge-item" title="{{ badge.description }}">
-                                    <div class="badge-icon">
-                                        <i class="fas {{ badge.icon }}"></i>
+                        <div class="col-md-8">
+                            <div class="current-badge-card">
+                                {% set badges = {
+                                    1: {'name': 'Newcomer', 'icon': 'fa-star-of-life', 'color': 'info', 'description': 'Welcome to AccountaParts!'},
+                                    2: {'name': 'Seedling', 'icon': 'fa-seedling', 'color': 'success', 'description': 'Taking your first steps'},
+                                    3: {'name': 'Growing', 'icon': 'fa-leaf', 'color': 'success', 'description': 'Making steady progress'},
+                                    4: {'name': 'Established', 'icon': 'fa-tree', 'color': 'success', 'description': 'Building strong habits'},
+                                    5: {'name': 'Rising Star', 'icon': 'fa-star', 'color': 'warning', 'description': 'Showing great potential'},
+                                    6: {'name': 'Champion', 'icon': 'fa-crown', 'color': 'warning', 'description': 'Leading by example'},
+                                    7: {'name': 'Elite', 'icon': 'fa-gem', 'color': 'info', 'description': 'Mastering your goals'},
+                                    8: {'name': 'Master', 'icon': 'fa-trophy', 'color': 'danger', 'description': 'Expert level reached'},
+                                    9: {'name': 'Legend', 'icon': 'fa-medal', 'color': 'danger', 'description': 'Legendary status achieved'},
+                                    10: {'name': 'Ultimate', 'icon': 'fa-award', 'color': 'primary', 'description': 'Ultimate achiever status'}
+                                } %}
+                                {% set current_badge = badges.get(current_user.level, badges[1]) %}
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="badge-icon bg-{{ current_badge.color }}">
+                                        <i class="fas {{ current_badge.icon }}"></i>
                                     </div>
-                                    <span class="badge-name">{{ badge.name }}</span>
+                                    <div class="flex-grow-1">
+                                        <h6 class="badge-title mb-1">{{ current_badge.name }} Badge</h6>
+                                        <p class="badge-description mb-0">{{ current_badge.description }}</p>
+                                    </div>
+                                    <a href="{{ url_for('how_it_works') }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -363,30 +744,36 @@
                         <div class="col-3 col-md-6">
                             <div class="stats-card">
                                 <h6>Goals</h6>
-                                <h3>{{ goals|length }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-3 col-md-6">
-                            <div class="stats-card">
-                                <h6>Done</h6>
-                                <h3>{{ goals|selectattr('completed')|list|length }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-3 col-md-6">
-                            <div class="stats-card">
-                                <h6>Streak</h6>
-                                <div class="streak-display">
-                                    <i class="fas fa-fire"></i>
-                                    <h3>{{ current_user.current_streak }}</h3>
+                                <div class="stats-display">
+                                    <i class="fas fa-tasks text-primary"></i>
+                                    <span class="stats-count">{{ goals|length }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-3 col-md-6">
                             <div class="stats-card">
-                                <h6>AP</h6>
-                                <div class="ap-display">
-                                    <i class="fas fa-handshake"></i>
-                                    <h3>1</h3>
+                                <h6>Done</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span class="stats-count">{{ goals|selectattr('completed')|list|length }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>Streak</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-fire text-warning"></i>
+                                    <span class="stats-count">{{ current_user.current_streak if current_user.current_streak else 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3 col-md-6">
+                            <div class="stats-card">
+                                <h6>Points</h6>
+                                <div class="stats-display">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span class="stats-count">{{ current_user.points }}</span>
                                 </div>
                             </div>
                         </div>
@@ -478,12 +865,16 @@
             <!-- Partnerships -->
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-users"></i> Partnership
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Partnership</h5>
+                        <a href="{{ url_for('accountability_partner') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
                     
-                    {% if partner %}
-                        <div class="partnership-info">
+                    {% if current_user.partner_id %}
+                        <div class="partner-info">
+                            {% set partner = current_user.get_partner() %}
                             <h6 class="mb-3">Your Partner: {{ partner.username }}</h6>
                             
                             <!-- Check-in Form -->
@@ -660,39 +1051,52 @@
 
     function completeGoal(goalId) {
         if (confirm('Mark this goal as complete?')) {
-            fetch(`/goals/${goalId}/complete`, {
+            fetch(`/complete_goal/${goalId}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+                },
+                credentials: 'same-origin'
             })
             .then(response => {
-                if (response.ok) {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('Server response:', text);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
                     location.reload();
                 } else {
-                    alert('Failed to complete goal');
+                    console.error('Server error:', data.message);
+                    alert('Failed to complete goal: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while completing the goal');
+                alert('An error occurred while completing the goal: ' + error.message);
             });
         }
     }
 
     function deleteGoal(goalId) {
         if (confirm('Are you sure you want to delete this goal?')) {
-            fetch(`/goals/${goalId}`, {
-                method: 'DELETE',
+            fetch(`/delete_goal/${goalId}`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     location.reload();
                 } else {
-                    alert('Failed to delete goal');
+                    alert('Failed to delete goal: ' + data.message);
                 }
             })
             .catch(error => {
@@ -716,6 +1120,14 @@
             // Set the mood value in hidden input
             document.getElementById('selected-mood').value = this.dataset.mood;
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
     });
 </script>
 {% endblock %}

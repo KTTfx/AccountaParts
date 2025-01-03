@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">How AccountaParts Works</h2>
+                    
+                    <!-- Overview Section -->
+                    <section class="mb-5">
+                        <h3 class="section-title">Overview</h3>
+                        <p>AccountaParts is your personal accountability partner platform. Set goals, track progress, and grow together with your accountability partner. Our system is designed to keep you motivated and engaged through levels, points, and achievement badges.</p>
+                    </section>
+
+                    <!-- Level System Section -->
+                    <section class="mb-5">
+                        <h3 class="section-title">Level System</h3>
+                        <p class="mb-4">Progress through 10 unique levels as you achieve your goals and earn points. Each level represents your growth and commitment to self-improvement.</p>
+                        
+                        <div class="row g-3">
+                            {% set levels = {
+                                1: {'name': 'Newcomer', 'icon': 'fa-star-of-life', 'color': 'info', 'points': '0-100'},
+                                2: {'name': 'Seedling', 'icon': 'fa-seedling', 'color': 'success', 'points': '100-200'},
+                                3: {'name': 'Growing', 'icon': 'fa-leaf', 'color': 'success', 'points': '200-300'},
+                                4: {'name': 'Established', 'icon': 'fa-tree', 'color': 'success', 'points': '300-400'},
+                                5: {'name': 'Rising Star', 'icon': 'fa-star', 'color': 'warning', 'points': '400-500'},
+                                6: {'name': 'Champion', 'icon': 'fa-crown', 'color': 'warning', 'points': '500-600'},
+                                7: {'name': 'Elite', 'icon': 'fa-gem', 'color': 'info', 'points': '600-700'},
+                                8: {'name': 'Master', 'icon': 'fa-trophy', 'color': 'danger', 'points': '700-800'},
+                                9: {'name': 'Legend', 'icon': 'fa-medal', 'color': 'danger', 'points': '800-900'},
+                                10: {'name': 'Ultimate', 'icon': 'fa-award', 'color': 'primary', 'points': '900+'}
+                            } %}
+                            
+                            {% for level, details in levels.items() %}
+                            <div class="col-md-6">
+                                <div class="level-card">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="level-icon bg-{{ details.color }}">
+                                            <i class="fas {{ details.icon }}"></i>
+                                        </div>
+                                        <div class="level-details">
+                                            <h5 class="mb-1">Level {{ level }}: {{ details.name }}</h5>
+                                            <p class="text-muted mb-0">{{ details.points }} points</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <!-- Achievement Badges Section -->
+                    <section class="mb-5">
+                        <h3 class="section-title">Achievement Badges</h3>
+                        <p class="mb-4">Earn special badges by reaching milestones and maintaining consistent progress. Each badge represents a unique achievement in your journey.</p>
+                        
+                        <div class="row g-3">
+                            {% set badges = {
+                                'streak_master': {'name': 'Streak Master', 'icon': 'fa-fire', 'color': 'warning', 'description': 'Maintain a 7-day streak'},
+                                'early_bird': {'name': 'Early Bird', 'icon': 'fa-sun', 'color': 'warning', 'description': 'Complete 5 goals before noon'},
+                                'goal_crusher': {'name': 'Goal Crusher', 'icon': 'fa-bullseye', 'color': 'danger', 'description': 'Complete 10 goals in a week'},
+                                'team_player': {'name': 'Team Player', 'icon': 'fa-users', 'color': 'info', 'description': 'Help verify 5 partner goals'},
+                                'monthly_master': {'name': 'Monthly Master', 'icon': 'fa-calendar-check', 'color': 'primary', 'description': 'Complete all monthly goals'},
+                                'feedback_friend': {'name': 'Feedback Friend', 'icon': 'fa-comment-dots', 'color': 'success', 'description': 'Leave 10 encouraging comments'}
+                            } %}
+                            
+                            {% for badge_id, badge in badges.items() %}
+                            <div class="col-md-4">
+                                <div class="badge-card">
+                                    <div class="badge-icon bg-{{ badge.color }} mb-2">
+                                        <i class="fas {{ badge.icon }}"></i>
+                                    </div>
+                                    <h5 class="badge-title">{{ badge.name }}</h5>
+                                    <p class="badge-description mb-0">{{ badge.description }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <!-- Points System Section -->
+                    <section class="mb-5">
+                        <h3 class="section-title">Points System</h3>
+                        <p>Earn points through various activities:</p>
+                        <ul class="points-list">
+                            <li>Completing a goal: 10-30 points (based on difficulty)</li>
+                            <li>Daily check-in: 5 points</li>
+                            <li>Maintaining streaks: 10 points per week</li>
+                            <li>Verifying partner's goals: 5 points</li>
+                            <li>Receiving goal verification: 5 points</li>
+                            <li>Leaving encouraging comments: 2 points</li>
+                        </ul>
+                    </section>
+
+                    <!-- Getting Started Section -->
+                    <section>
+                        <h3 class="section-title">Getting Started</h3>
+                        <ol class="getting-started-list">
+                            <li>Create your account and set up your profile</li>
+                            <li>Add an accountability partner</li>
+                            <li>Set your first goal</li>
+                            <li>Check in daily to maintain your streak</li>
+                            <li>Support your partner and receive support</li>
+                            <li>Track your progress and earn badges</li>
+                        </ol>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.section-title {
+    color: var(--bs-light);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.level-card {
+    padding: 1rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+}
+
+.level-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.level-icon i {
+    color: white;
+    font-size: 1.25rem;
+}
+
+.level-details h5 {
+    font-size: 1rem;
+    color: var(--bs-light);
+}
+
+.badge-card {
+    text-align: center;
+    padding: 1.25rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    height: 100%;
+}
+
+.badge-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.badge-icon i {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.badge-title {
+    font-size: 1rem;
+    color: var(--bs-light);
+    margin-bottom: 0.5rem;
+}
+
+.badge-description {
+    font-size: 0.875rem;
+    color: var(--bs-gray-400);
+}
+
+.points-list, .getting-started-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.points-list li, .getting-started-list li {
+    padding: 0.5rem 0;
+    color: var(--bs-gray-300);
+    display: flex;
+    align-items: center;
+}
+
+.points-list li::before {
+    content: "•";
+    color: var(--bs-primary);
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.getting-started-list {
+    counter-reset: step;
+}
+
+.getting-started-list li {
+    counter-increment: step;
+}
+
+.getting-started-list li::before {
+    content: counter(step);
+    background: var(--bs-primary);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .level-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .level-icon i {
+        font-size: 1rem;
+    }
+    
+    .level-details h5 {
+        font-size: 0.9rem;
+    }
+    
+    .badge-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .badge-icon i {
+        font-size: 1.25rem;
+    }
+    
+    .badge-title {
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
