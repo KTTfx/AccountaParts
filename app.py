@@ -146,7 +146,7 @@ def check_and_award_badges(user):
     # Check Week Warrior badge (7-day streak)
     week_warrior = Badge.query.filter_by(name='Week Warrior').first()
     if week_warrior and not UserBadge.query.filter_by(user_id=user.id, badge_id=week_warrior.id).first():
-        goals_with_week_streak = Goal.query.filter_by(user_id=user.id, streak__gte=7).count()
+        goals_with_week_streak = Goal.query.filter(Goal.user_id == user.id, Goal.streak >= 7).count()
         if goals_with_week_streak >= 1:
             user_badge = UserBadge(user_id=user.id, badge_id=week_warrior.id)
             db.session.add(user_badge)
@@ -156,7 +156,7 @@ def check_and_award_badges(user):
     # Check Monthly Master badge (30-day streak)
     monthly_master = Badge.query.filter_by(name='Monthly Master').first()
     if monthly_master and not UserBadge.query.filter_by(user_id=user.id, badge_id=monthly_master.id).first():
-        goals_with_month_streak = Goal.query.filter_by(user_id=user.id, streak__gte=30).count()
+        goals_with_month_streak = Goal.query.filter(Goal.user_id == user.id, Goal.streak >= 30).count()
         if goals_with_month_streak >= 1:
             user_badge = UserBadge(user_id=user.id, badge_id=monthly_master.id)
             db.session.add(user_badge)
@@ -604,6 +604,12 @@ def accountability_partner():
                          partner_goals=partner_goals,
                          partner_stats=partner_stats,
                          latest_checkin=latest_checkin)
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    users = User.query.all()
+    return render_template('admin/users.html', users=users)
 
 # Create test users and sample data
 def create_sample_data():

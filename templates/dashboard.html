@@ -810,14 +810,15 @@
                                         </div>
                                     </div>
                                     <div class="goal-actions mt-2 mt-md-0">
-                                        <button class="btn btn-success btn-sm" onclick="completeGoal({{ goal.id }})">
+                                        {% if not goal.completed %}
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#completeGoalModal{{ goal.id }}">
                                             <i class="fas fa-check"></i>
                                         </button>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteGoal({{ goal.id }})">
+                                        {% endif %}
+                                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteGoalModal{{ goal.id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
-                                </div>
 
                                 <!-- Comments Section -->
                                 <div class="comments-section mt-3">
@@ -1050,62 +1051,70 @@
     }
 
     function completeGoal(goalId) {
-        if (confirm('Mark this goal as complete?')) {
-            fetch(`/complete_goal/${goalId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        console.error('Server response:', text);
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    console.error('Server error:', data.message);
-                    alert('Failed to complete goal: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while completing the goal: ' + error.message);
+    fetch(`/complete_goal/${goalId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Server response:', text);
+                throw new Error(`HTTP error! status: ${response.status}`);
             });
         }
-    }
-
-    function deleteGoal(goalId) {
-        if (confirm('Are you sure you want to delete this goal?')) {
-            fetch(`/delete_goal/${goalId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Failed to delete goal: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the goal');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Close the modal only on success
+            const modal = bootstrap.Modal.getInstance(document.getElementById(`completeGoalModal${goalId}`));
+            modal.hide();
+            location.reload();
+        } else {
+            console.error('Server error:', data.message);
+            alert('Failed to complete goal: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while completing the goal: ' + error.message);
+    });
+}
+function deleteGoal(goalId) {
+    fetch(`/delete_goal/${goalId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Server response:', text);
+                throw new Error(`HTTP error! status: ${response.status}`);
             });
         }
-    }
-
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            console.error('Server error:', data.message);
+            alert('Failed to delete goal: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting the goal: ' + error.message);
+    });
+}
     // Mood button selection
     document.querySelectorAll('.mood-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -1130,4 +1139,5 @@
         })
     });
 </script>
+{% include 'includes/goal_modals.html' %}
 {% endblock %}
