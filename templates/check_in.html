@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Check-in{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">
+                        <i class="fas fa-calendar-check text-primary me-2"></i>
+                        Daily Check-in with {{ partner.username }}
+                    </h4>
+                    
+                    <form action="{{ url_for('check_in') }}" method="POST">
+                        <div class="mb-4">
+                            <label class="form-label">How are you feeling today?</label>
+                            <div class="mood-btn-group">
+                                <button type="button" class="btn mood-btn" data-mood="great">
+                                    <i class="fas fa-grin-stars"></i>
+                                    <span class="d-block mt-1">Great</span>
+                                </button>
+                                <button type="button" class="btn mood-btn" data-mood="good">
+                                    <i class="fas fa-smile"></i>
+                                    <span class="d-block mt-1">Good</span>
+                                </button>
+                                <button type="button" class="btn mood-btn" data-mood="okay">
+                                    <i class="fas fa-meh"></i>
+                                    <span class="d-block mt-1">Okay</span>
+                                </button>
+                                <button type="button" class="btn mood-btn" data-mood="bad">
+                                    <i class="fas fa-frown"></i>
+                                    <span class="d-block mt-1">Bad</span>
+                                </button>
+                            </div>
+                            <input type="hidden" name="mood" id="selectedMood" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="message" class="form-label">Share your thoughts (optional)</label>
+                            <textarea class="form-control" id="message" name="message" rows="3" 
+                                    placeholder="How was your day? Any challenges or victories to share?"></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Submit Check-in
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const moodButtons = document.querySelectorAll('.mood-btn');
+    const moodInput = document.getElementById('selectedMood');
+
+    moodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            moodButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            // Set the hidden input value
+            moodInput.value = this.getAttribute('data-mood');
+        });
+    });
+});
+</script>
+{% endblock %}

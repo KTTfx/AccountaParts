@@ -53,7 +53,7 @@
                                 <h6>Streak</h6>
                                 <div class="stats-display">
                                     <i class="fas fa-fire text-warning"></i>
-                                    <span class="stats-count">{{ partner_stats.current_streak }}</span>
+                                    <span class="stats-count">{{ get_my_streak() }}</span>
                                 </div>
                             </div>
                         </div>
@@ -62,7 +62,7 @@
                                 <h6>Points</h6>
                                 <div class="stats-display">
                                     <i class="fas fa-star text-warning"></i>
-                                    <span class="stats-count">{{ partner_stats.points }}</span>
+                                    <span class="stats-count">{{ partner.points }}</span>
                                 </div>
                             </div>
                         </div>
@@ -104,9 +104,9 @@
                 <div class="card-body">
                     <h5 class="card-title">Quick Actions</h5>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary" onclick="location.href='{{ url_for('check_in') }}'">
+                        <a class="btn btn-outline-primary" href="{{ url_for('check_in') }}">
                             <i class="fas fa-comment-alt me-2"></i>Check-in
-                        </button>
+                        </a>
                         <form action="{{ url_for('remove_partner') }}" method="POST" onsubmit="return confirm('Are you sure you want to remove your accountability partner?');">
                             <button type="submit" class="btn btn-outline-danger w-100">
                                 <i class="fas fa-user-minus me-2"></i>Remove Partner
@@ -123,46 +123,62 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Partner's Goals</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-tasks me-2 text-primary"></i>Partner's Goals
+                        </h5>
+                    </div>
                     {% if partner_goals %}
                         {% for goal in partner_goals %}
                         <div class="goal-card mb-3">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h5 class="mb-1">{{ goal.title }}</h5>
-                                    <p class="text-muted mb-2">{{ goal.description }}</p>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-2">{{ goal.title }}</h5>
+                                    <p class="text-muted mb-3">{{ goal.description }}</p>
                                     <div class="goal-meta">
                                         {% if goal.category %}
-                                        <span class="badge" style="background-color: {{ goal.category.color }}">
+                                        <div class="meta-item">
+                                            <i class="fas fa-tag"></i>
+                                            <span class="meta-label">Category:</span>
                                             {{ goal.category.name }}
-                                        </span>
+                                        </div>
                                         {% endif %}
                                         {% if goal.deadline %}
-                                        <span class="badge bg-info">
-                                            <i class="fas fa-calendar-alt me-1"></i>
+                                        <div class="meta-item">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <span class="meta-label">Due Date:</span>
                                             {{ goal.deadline.strftime('%Y-%m-%d') }}
-                                        </span>
+                                        </div>
                                         {% endif %}
-                                        <span class="badge bg-primary">
-                                            <i class="fas fa-star me-1"></i>
-                                            {{ goal.points_reward }} pts
-                                        </span>
+                                        <div class="meta-item">
+                                            <i class="fas fa-star"></i>
+                                            <span class="meta-label">Reward:</span>
+                                            {{ goal.points_reward }} points
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-signal"></i>
+                                            <span class="meta-label">Difficulty:</span>
+                                            {{ goal.difficulty }}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="goal-status">
+                                <div class="goal-status ms-3">
                                     {% if goal.completed %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle me-1"></i>Completed
-                                    </span>
+                                    <div class="meta-item">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <span>Completed</span>
+                                    </div>
                                     {% else %}
-                                    <span class="badge bg-warning">
-                                        <i class="fas fa-clock me-1"></i>In Progress
-                                    </span>
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock text-primary"></i>
+                                        <span>In Progress</span>
+                                    </div>
                                     {% endif %}
                                 </div>
                             </div>
+
                             {% if goal.comments %}
-                            <div class="comments-section mt-3">
+                            <div class="comments-section">
                                 <h6 class="mb-2">
                                     <i class="fas fa-comments text-primary me-2"></i>
                                     Recent Comments
@@ -170,7 +186,10 @@
                                 {% for comment in goal.comments[-2:] %}
                                 <div class="comment">
                                     <div class="comment-header">
-                                        <strong>{{ comment.author.username }}</strong>
+                                        <strong>
+                                            <i class="fas fa-user-circle text-primary me-1"></i>
+                                            {{ comment.author.username }}
+                                        </strong>
                                         <small class="text-muted">
                                             {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
                                         </small>
@@ -180,18 +199,24 @@
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <div class="goal-actions mt-3">
-                                <button class="btn btn-sm btn-outline-primary" onclick="location.href='#'">
-                                    <i class="fas fa-comment me-1"></i>Comment
+
+                            <div class="goal-actions">
+                                <button class="btn btn-outline-primary" onclick="location.href='#'">
+                                    <i class="fas fa-comment"></i>
+                                    Add Comment
                                 </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="location.href='#'">
-                                    <i class="fas fa-heart me-1"></i>Encourage
+                                <button class="btn btn-encourage" onclick="location.href='#'">
+                                    <i class="fas fa-heart"></i>
+                                    Encourage
                                 </button>
                             </div>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">Your partner hasn't added any goals yet.</p>
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-tasks mb-2" style="font-size: 2rem;"></i>
+                            <p class="mb-0">No goals found</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -297,6 +322,22 @@
 .comment-content {
     margin: 0;
     font-size: 0.9rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.meta-item:last-child {
+    margin-bottom: 0;
+}
+
+.meta-label {
+    font-size: 0.9rem;
+    color: var(--bs-gray-400);
 }
 
 @media (max-width: 768px) {

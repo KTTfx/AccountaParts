@@ -764,7 +764,7 @@
                                 <h6>Streak</h6>
                                 <div class="stats-display">
                                     <i class="fas fa-fire text-warning"></i>
-                                    <span class="stats-count">{{ current_user.current_streak if current_user.current_streak else 0 }}</span>
+                                    <span class="stats-count">{{ get_my_streak() }}</span>
                                 </div>
                             </div>
                         </div>
@@ -867,8 +867,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0">Partnership</h5>
-                        <a href="{{ url_for('accountability_partner') }}" class="btn btn-sm btn-outline-primary">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-handshake me-2 text-primary"></i>Partnership
+                        </h5>
+                        <a href="{{ url_for('accountability_partner') }}" class="btn btn-sm btn-outline-primary" title="Partnership Details">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
                     </div>
@@ -876,39 +878,51 @@
                     {% if current_user.partner_id %}
                         <div class="partner-info">
                             {% set partner = current_user.get_partner() %}
-                            <h6 class="mb-3">Your Partner: {{ partner.username }}</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-user-circle text-primary me-2"></i>
+                                <h6 class="mb-0">{{ partner.username }}</h6>
+                            </div>
                             
                             <!-- Check-in Form -->
                             <form action="{{ url_for('check_in') }}" method="post" class="mb-3">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">How are you feeling today?</label>
+                                    <label class="form-label">
+                                        <i class="fas fa-smile me-1"></i>
+                                        How are you feeling today?
+                                    </label>
                                     <div class="mood-btn-group">
-                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😊">😊</button>
-                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😐">😐</button>
-                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="😔">😔</button>
-                                        <button type="button" class="btn btn-outline-primary mood-btn" data-mood="💪">💪</button>
+                                        <button type="button" class="btn mood-btn" data-mood="😊">😊</button>
+                                        <button type="button" class="btn mood-btn" data-mood="😐">😐</button>
+                                        <button type="button" class="btn mood-btn" data-mood="😔">😔</button>
+                                        <button type="button" class="btn mood-btn" data-mood="💪">💪</button>
                                     </div>
                                     <input type="hidden" name="mood" id="selected-mood" required>
                                 </div>
                                 
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Message for your partner:</label>
-                                    <textarea class="form-control form-control-sm" name="message" rows="2" placeholder="Share your thoughts..."></textarea>
+                                    <label class="form-label">
+                                        <i class="fas fa-comment-alt me-1"></i>
+                                        Message for your partner:
+                                    </label>
+                                    <textarea class="form-control" name="message" rows="2" placeholder="Share your thoughts or progress..."></textarea>
                                 </div>
                                 
-                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <button type="submit" class="btn btn-primary w-100">
                                     <i class="fas fa-check-circle me-1"></i> Check In
                                 </button>
                             </form>
                         </div>
                     {% else %}
-                        <p class="text-muted mb-3">You don't have a partner yet. Add one to start tracking goals together!</p>
-                        <form action="{{ url_for('add_partner') }}" method="post" class="input-group">
-                            <input type="text" class="form-control form-control-sm" name="partner_username" placeholder="Enter username">
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-user-plus"></i>
-                            </button>
-                        </form>
+                        <div class="partner-info text-center">
+                            <i class="fas fa-user-plus text-primary mb-3" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-3">You don't have a partner yet. Add one to start tracking goals together!</p>
+                            <form action="{{ url_for('add_partner') }}" method="post" class="d-flex gap-2">
+                                <input type="text" name="partner_username" class="form-control" placeholder="Partner's username" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
                 </div>
             </div>

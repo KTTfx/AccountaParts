@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 from sqlalchemy import func
@@ -38,7 +38,7 @@ class User(UserMixin, db.Model):
     
     def get_partner(self):
         if self.partner_id:
-            return User.query.get(self.partner_id)
+            return db.session.get(User, self.partner_id)
         return None
 
     def set_password(self, password):
@@ -57,7 +57,7 @@ class UserBadge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     badge_id = db.Column(db.Integer, db.ForeignKey('badge.id'), nullable=False)
-    earned_date = db.Column(db.DateTime, default=datetime.utcnow)
+    earned_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -87,7 +87,7 @@ class Goal(db.Model):
     verification_required = db.Column(db.Boolean, default=False)
     points_reward = db.Column(db.Integer, default=10)
     streak = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     completed = db.Column(db.Boolean, default=False)
     completed_at = db.Column(db.DateTime, nullable=True)
     last_streak_update = db.Column(db.DateTime, nullable=True)
@@ -100,8 +100,8 @@ class Partnership(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     partner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    check_in_streak = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    check_in_streak = db.Column(db.Integer, default=0, nullable=False)  # Set default=0 and not nullable
     last_check_in = db.Column(db.DateTime)
 
 class CheckIn(db.Model):
@@ -109,12 +109,12 @@ class CheckIn(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     mood = db.Column(db.String(10), nullable=False)
     message = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(500), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=False)
 
@@ -133,13 +133,13 @@ def update_streak(goal):
     if not goal.last_streak_update:
         goal.streak = 1
     else:
-        days_diff = (datetime.utcnow().date() - goal.last_streak_update.date()).days
+        days_diff = (datetime.now(timezone.utc).date() - goal.last_streak_update.date()).days
         if days_diff == 1:  # Consecutive day
             goal.streak += 1
         elif days_diff > 1:  # Streak broken
             goal.streak = 1
     
-    goal.last_streak_update = datetime.utcnow()
+    goal.last_streak_update = datetime.now(timezone.utc)
 
 def check_and_award_badges(user):
     """Check and award badges based on user achievements"""
@@ -188,7 +188,7 @@ def check_and_award_badges(user):
 
 def get_my_latest_checkin():
     """Get the current user's latest check-in for today"""
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     return CheckIn.query.filter(
         CheckIn.user_id == current_user.id,
         func.date(CheckIn.created_at) == today
@@ -199,20 +199,40 @@ def get_partner_latest_checkin():
     if not current_user.partner_id:
         return None
         
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     return CheckIn.query.filter(
         CheckIn.user_id == current_user.partner_id,
         func.date(CheckIn.created_at) == today
     ).first()
 
+def get_partnership_streak(user):
+    """Get the user's current partnership streak"""
+    partnership = Partnership.query.filter(
+        ((Partnership.user_id == user.id) & Partnership.partner_id.isnot(None)) |
+        ((Partnership.partner_id == user.id) & Partnership.user_id.isnot(None))
+    ).first()
+    
+    return partnership.check_in_streak if partnership else 0
+
 @app.context_processor
 def utility_processor():
-    """Make check-in helper functions available in templates"""
-    return {
-        'get_my_latest_checkin': get_my_latest_checkin,
-        'get_partner_latest_checkin': get_partner_latest_checkin,
-        'today': datetime.utcnow().date()
-    }
+    def get_my_latest_checkin():
+        return get_latest_checkin(current_user.id)
+    
+    def get_partner_latest_checkin():
+        partner = current_user.get_partner()
+        if partner:
+            return get_latest_checkin(partner.id)
+        return None
+    
+    def get_my_streak():
+        return get_partnership_streak(current_user)
+    
+    return dict(
+        get_my_latest_checkin=get_my_latest_checkin,
+        get_partner_latest_checkin=get_partner_latest_checkin,
+        get_my_streak=get_my_streak
+    )
 
 # Routes
 @app.route('/')
@@ -276,7 +296,10 @@ def dashboard():
 @app.route('/categories')
 @login_required
 def categories():
+    # Get all categories but only include goals for the current user
     categories = Category.query.all()
+    for category in categories:
+        category.goals = [goal for goal in category.goals if goal.user_id == current_user.id]
     return render_template('categories.html', categories=categories)
 
 @app.route('/add_category', methods=['POST'])
@@ -446,7 +469,7 @@ def remove_partner():
     flash('Partnership removed successfully', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/check_in', methods=['POST'])
+@app.route('/check_in', methods=['GET', 'POST'])
 @login_required
 def check_in():
     partner = current_user.get_partner()
@@ -454,8 +477,23 @@ def check_in():
         flash('You don\'t have a partner to check in with', 'danger')
         return redirect(url_for('dashboard'))
     
+    if request.method == 'GET':
+        # Check if already checked in today
+        today = datetime.now(timezone.utc).date()
+        existing_checkin = CheckIn.query.filter(
+            CheckIn.user_id == current_user.id,
+            func.date(CheckIn.created_at) == today
+        ).first()
+        
+        if existing_checkin:
+            flash('You have already checked in today', 'info')
+            return redirect(url_for('accountability_partner'))
+            
+        return render_template('check_in.html', partner=partner)
+    
+    # POST request handling
     # Check if already checked in today
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     existing_checkin = CheckIn.query.filter(
         CheckIn.user_id == current_user.id,
         func.date(CheckIn.created_at) == today
@@ -463,38 +501,71 @@ def check_in():
     
     if existing_checkin:
         flash('You have already checked in today', 'info')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('accountability_partner'))
     
-    mood = request.form.get('mood', type=int)
+    mood = request.form.get('mood')
     message = request.form.get('message', '')
     
-    if not mood or mood not in range(1, 6):
+    if not mood or mood not in ['great', 'good', 'okay', 'bad']:
         flash('Please select a valid mood', 'error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('accountability_partner'))
     
-    # Create check-in
-    checkin = CheckIn(
+    # Check partner's check-in for today
+    partner_checkin = CheckIn.query.filter(
+        CheckIn.user_id == partner.id,
+        func.date(CheckIn.created_at) == today
+    ).first()
+
+    # Get or create partnership record
+    partnership = Partnership.query.filter(
+        ((Partnership.user_id == current_user.id) & (Partnership.partner_id == partner.id)) |
+        ((Partnership.user_id == partner.id) & (Partnership.partner_id == current_user.id))
+    ).first()
+
+    if not partnership:
+        partnership = Partnership(
+            user_id=current_user.id, 
+            partner_id=partner.id,
+            check_in_streak=0  # Initialize streak to 0
+        )
+        db.session.add(partnership)
+    elif partnership.check_in_streak is None:  # Handle existing partnerships with None streak
+        partnership.check_in_streak = 0
+
+    # Update streak logic
+    if partnership.last_check_in:
+        yesterday = today - timedelta(days=1)
+        if partnership.last_check_in.date() < yesterday:
+            # Streak broken - more than one day gap
+            partnership.check_in_streak = 0
+    
+    # Award points immediately
+    current_user.points += 5
+    flash('You earned 5 points for checking in!', 'success')
+
+    # If partner has already checked in today, increase streak
+    if partner_checkin:
+        partnership.check_in_streak += 1
+        flash(f' Streak increased to {partnership.check_in_streak} days! Both partners checked in today!', 'success')
+    else:
+        # First check-in, waiting for partner
+        if partnership.check_in_streak > 0:
+            flash(f'Current streak: {partnership.check_in_streak} days - Don\'t let it break! Remind your partner to check in.', 'warning')
+        else:
+            flash('Waiting for your partner to check in to increase the streak!', 'info')
+
+    # Record the check-in
+    check_in = CheckIn(
         user_id=current_user.id,
         mood=mood,
         message=message
     )
-    db.session.add(checkin)
-
-    # Update partnership streak and award points
-    partner_checkin = CheckIn.query.filter_by(
-        user_id=partner.id,
-        created_at=datetime.utcnow().date()
-    ).first()
-    if partner_checkin:
-        current_user.points += 10
-        flash('You earned 10 points for checking in with your partner!', 'success')
-
-    # Check for badge achievements
-    check_and_award_badges(current_user)
-
+    db.session.add(check_in)
+    
+    partnership.last_check_in = datetime.now(timezone.utc)
     db.session.commit()
-    flash('Check-in recorded!', 'success')
-    return redirect(url_for('dashboard'))
+    
+    return redirect(url_for('accountability_partner'))
 
 @app.route('/complete_goal/<int:goal_id>', methods=['POST'])
 @login_required
@@ -511,7 +582,7 @@ def complete_goal(goal_id):
         
         # Update the goal
         goal.completed = True
-        goal.completed_at = datetime.utcnow()
+        goal.completed_at = datetime.now(timezone.utc)
         
         # Update streak and check for badges
         update_streak(goal)
@@ -769,7 +840,7 @@ def create_sample_data():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 if __name__ == '__main__':
     with app.app_context():

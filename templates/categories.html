@@ -3,74 +3,283 @@
 {% block title %}Categories{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <h2>Goal Categories</h2>
-        <div class="row">
-            {% for category in categories %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title" style="color: {{ category.color }}">
-                                {{ category.name }}
-                            </h5>
-                            <span class="badge rounded-pill" style="background-color: {{ category.color }}">
-                                {{ category.goals|length }} goals
-                            </span>
-                        </div>
-                        <p class="card-text">{{ category.description }}</p>
-                    </div>
-                </div>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-folder-open text-primary me-2"></i>Goal Categories
+                </h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="fas fa-plus me-2"></i>New Category
+                </button>
             </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Add New Category</h5>
-                <form action="{{ url_for('add_category') }}" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Color</label>
-                        <input type="color" name="color" class="form-control form-control-color" value="#007bff">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Category</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5 class="card-title">Category Statistics</h5>
-                <div class="list-group list-group-flush">
-                    {% for category in categories %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span style="color: {{ category.color }}">{{ category.name }}</span>
-                            <div>
-                                <span class="badge bg-success">
-                                    {{ category.goals|selectattr('completed', 'true')|list|length }} completed
-                                </span>
-                                <span class="badge bg-primary">
-                                    {{ category.goals|selectattr('completed', 'false')|list|length }} active
-                                </span>
+            
+            <div class="row">
+                {% for category in categories %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 category-card" style="border-left: 4px solid {{ category.color }};">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">
+                                    <span class="category-dot" style="background-color: {{ category.color }}"></span>
+                                    {{ category.name }}
+                                </h5>
+                                <div class="category-stats">
+                                    <span class="badge bg-success me-1" title="Completed Goals">
+                                        <i class="fas fa-check-circle"></i>
+                                        {{ category.goals|selectattr('completed', 'true')|list|length }}
+                                    </span>
+                                    <span class="badge bg-primary" title="Active Goals">
+                                        <i class="fas fa-clock"></i>
+                                        {{ category.goals|selectattr('completed', 'false')|list|length }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted">{{ category.description or 'No description available' }}</p>
+                            <div class="progress" style="height: 4px;">
+                                {% set completed = category.goals|selectattr('completed', 'true')|list|length %}
+                                {% set total = category.goals|length %}
+                                {% set percent = (completed / total * 100) if total > 0 else 0 %}
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ percent }}%; background-color: {{ category.color }};"
+                                     aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-folder-open mb-3" style="font-size: 3rem;"></i>
+                        <h5>No Categories Yet</h5>
+                        <p>Create your first category to start organizing your goals!</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                            <i class="fas fa-plus me-2"></i>Add Category
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-chart-pie text-primary me-2"></i>Category Overview
+                    </h5>
+                    <div class="category-overview">
+                        {% for category in categories %}
+                        <div class="category-stat-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="category-name">
+                                    <span class="category-dot" style="background-color: {{ category.color }}"></span>
+                                    {{ category.name }}
+                                </span>
+                                <span class="total-goals">{{ category.goals|length }} goals</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                {% set completed = category.goals|selectattr('completed', 'true')|list|length %}
+                                {% set total = category.goals|length %}
+                                {% set percent = (completed / total * 100) if total > 0 else 0 %}
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ percent }}%; background-color: {{ category.color }};"
+                                     aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder-plus text-primary me-2"></i>Add New Category
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_category') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-tag me-1"></i>Category Name
+                        </label>
+                        <input type="text" name="name" class="form-control" required
+                               placeholder="e.g., Fitness, Career, Learning">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Description
+                        </label>
+                        <textarea name="description" class="form-control" rows="3"
+                                  placeholder="What kind of goals belong in this category?"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-palette me-1"></i>Category Color
+                        </label>
+                        <div class="d-flex gap-2">
+                            <input type="color" name="color" class="form-control form-control-color" 
+                                   value="#007bff" title="Choose category color">
+                            <button type="button" class="btn btn-outline-secondary color-preset" data-color="#007bff">Blue</button>
+                            <button type="button" class="btn btn-outline-secondary color-preset" data-color="#28a745">Green</button>
+                            <button type="button" class="btn btn-outline-secondary color-preset" data-color="#dc3545">Red</button>
+                            <button type="button" class="btn btn-outline-secondary color-preset" data-color="#ffc107">Yellow</button>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.category-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.category-card .card-title {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.category-card .card-text {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.category-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.category-stats .badge {
+    padding: 0.3em 0.5em;
+    font-size: 0.75rem;
+}
+
+.category-stats .badge i {
+    font-size: 0.7rem;
+}
+
+.category-stat-item {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.category-stat-item:last-child {
+    border-bottom: none;
+}
+
+.category-name {
+    font-size: 0.85rem;
+    color: var(--bs-gray-700);
+}
+
+.total-goals {
+    font-size: 0.75rem;
+    color: var(--bs-gray-600);
+}
+
+.color-preset {
+    width: 50px;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+}
+
+.progress {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.form-control-color {
+    width: 50px;
+}
+
+h2 {
+    font-size: 1.5rem;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.modal-title {
+    font-size: 1.1rem;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.form-control {
+    font-size: 0.9rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.btn {
+    font-size: 0.9rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+.card-body {
+    padding: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Color preset buttons
+    document.querySelectorAll('.color-preset').forEach(button => {
+        button.addEventListener('click', function() {
+            const color = this.dataset.color;
+            document.querySelector('input[name="color"]').value = color;
+        });
+    });
+});
+</script>
 {% endblock %}
