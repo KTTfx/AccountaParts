@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" data-bs-theme="light">
+<html lang="en" data-theme="dark" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#007bff">
+    <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
@@ -166,7 +166,7 @@
 
         // Apply saved theme on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') || 'dark';
             const html = document.documentElement;
             const themeIcon = document.querySelector('#themeToggle i');
             
@@ -180,7 +180,10 @@
                 savedTheme === 'dark' ? '#121212' : '#007bff'
             );
             
-            themeIcon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            // Set initial icon state
+            if (themeIcon) {
+                themeIcon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
         });
     </script>
     

@@ -695,8 +695,31 @@ body, .card, .modal-content, .dropdown-menu, .form-control, .form-select, .navba
     .hero-icon {
         display: none;
     }
+    .hero-image-container {
+        position: relative;
+        padding: 2rem;
+    }
     .hero-image-container img {
         display: block;
+    }
+    .floating {
+        animation: floating 3s ease-in-out infinite;
+    }
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    .hero-stats {
+        margin: 0 auto;
+    }
+    .hero-stats .d-flex {
+        justify-content: center;
+    }
+    .d-grid {
+        text-align: center;
+    }
+    .feature-card, .testimonial-card {
+        margin-bottom: 1rem;
     }
 }
 
@@ -752,30 +775,6 @@ body, .card, .modal-content, .dropdown-menu, .form-control, .form-select, .navba
 
 .avatar {
     color: var(--primary-color);
-}
-
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-    .hero-section {
-        text-align: center;
-        padding: 3rem 0;
-    }
-    
-    .hero-stats {
-        margin: 0 auto;
-    }
-    
-    .hero-stats .d-flex {
-        justify-content: center;
-    }
-    
-    .d-grid {
-        text-align: center;
-    }
-    
-    .feature-card, .testimonial-card {
-        margin-bottom: 1rem;
-    }
 }
 
 /* Dark mode adjustments */
